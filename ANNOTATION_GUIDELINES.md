@@ -73,7 +73,157 @@ You **do not need to label them**, only decide whether the function changes.
 
 ---
 
-## 7. Canonical Examples
+## 7. Literature Examples
+Overall:
+- discourse segmentation
+- argumentation / reasoning structure
+- cognitive models of problem solving
+
+### Discourse Segmentation
+
+Justify:
+- sentence level segmentation
+- functional shifts
+- non-topical boundaries
+
+#### Example 1: Mann & Thompson (1988) — RST (Rethorical Structure Theory)
+Defines:
+- Introduces discourse units defined by function, not topic.
+```bibtex
+@article{MANNTHOMPSON+1988+243+281,
+    url = {https://doi.org/10.1515/text.1.1988.8.3.243},
+    title = {Rhetorical Structure Theory: Toward a functional theory of text organization},
+    title = {},
+    author = {WILLIAM C. MANN and SANDRA A. THOMPSON},
+    pages = {243--281},
+    volume = {8},
+    number = {3},
+    journal = {Text - Interdisciplinary Journal for the Study of Discourse},
+    doi = {doi:10.1515/text.1.1988.8.3.243},
+    year = {1988},
+    lastchecked = {2026-01-22}
+}
+```
+
+#### Example 2: Carlson, Marcu & Okurowski (2001) — Building a Discourse-Tagged Corpus in the Framework of Rhetorical Structure Theory
+Defines:
+- Defines Elementary Discourse Units (EDUs), segmented conservatively.
+```bibtex
+@inproceedings{carlson-etal-2001-building,
+    title = "Building a Discourse-Tagged Corpus in the Framework of {R}hetorical {S}tructure {T}heory",
+    author = "Carlson, Lynn  and
+      Marcu, Daniel  and
+      Okurovsky, Mary Ellen",
+    booktitle = "Proceedings of the Second {SIG}dial Workshop on Discourse and Dialogue",
+    year = "2001",
+    url = "https://aclanthology.org/W01-1605/"
+}
+```
+
+### Argumentation & reasoning structure (your conceptual foundation)
+
+Justify:
+- inference vs. premise vs. conclusion
+- revision and objection as first-class units
+- 
+#### Example 1: Toulmin (1958) - The Uses of Argument
+Defines:
+- Classic model separating claims, grounds, warrants (inference segments, contrast/objection, conclusion)
+```bibtex
+@book{toulmin2003uses,
+  title={The uses of argument},
+  author={Toulmin, Stephen E},
+  year={2003},
+  publisher={Cambridge university press}
+}
+```
+#### Example 2: Stede (2011) — Argumentation mining
+Defines:
+- Explicitly argues that argument units are discourse-level spans, not logical steps.
+```bibtex
+@book{stede2019argumentation,
+  title={Argumentation mining},
+  author={Stede, Manfred and Schneider, Jodi and Hirst, Graeme},
+  year={2019},
+  publisher={Springer}
+}
+```
+#### Example 3: Argument Mining Overview
+Defines:
+- Overview of argument mining literature, might be helpful?
+```bibtex
+@article{lawrence-reed-2019-argument,
+    title = "Argument Mining: A Survey",
+    author = "Lawrence, John  and
+      Reed, Chris",
+    journal = "Computational Linguistics",
+    volume = "45",
+    number = "4",
+    month = dec,
+    year = "2019",
+    address = "Cambridge, MA",
+    publisher = "MIT Press",
+    url = "https://aclanthology.org/J19-4006/",
+    doi = "10.1162/coli_a_00364",
+    pages = "765--818",
+    abstract = "Argument mining is the automatic identification and extraction of the structure of inference and reasoning expressed as arguments presented in natural language. Understanding argumentative structure makes it possible to determine not only what positions people are adopting, but also why they hold the opinions they do, providing valuable insights in domains as diverse as financial market prediction and public relations. This survey explores the techniques that establish the foundations for argument mining, provides a review of recent advances in argument mining techniques, and discusses the challenges faced in automatically extracting a deeper understanding of reasoning expressed in language in general."
+}
+```
+
+### Reasoning, problem solving & cognitive steps
+
+Justify:
+- “epistemic function” language
+
+#### Example 1: Newell & Simon (1971) — Human problem solving
+Defines:
+- Reasoning proceeds via state transitions, not atomic inferences (goal management, revision, multi.sentence steps)
+```bibtex
+@article{simon1971human,
+  title={Human problem solving: The state of the theory in 1970.},
+  author={Simon, Herbert A and Newell, Allen},
+  journal={American psychologist},
+  volume={26},
+  number={2},
+  pages={145},
+  year={1971},
+  publisher={American Psychological Association}
+}
+```
+#### Example 2: Polya (1945) — How to Solve It
+Defines:
+- Defines reasoning in phases: understand, plan, execute, review
+```bibtex
+@article{polya1957solve,
+  title={How to solve it},
+  author={Polya, George},
+  year={1957},
+  publisher={Princeton Press}
+}
+```
+
+### Recent LLM / reasoning trace–adjacent work
+
+Justify:
+- Introduces reasoning traces as explicit text objects.
+
+#### Example 1: Wei et al. (2022) — Chain-of-Thought
+Defines:
+- Introduces CoT traces
+```bibtex
+@misc{wei2023chainofthoughtpromptingelicitsreasoning,
+      title={Chain-of-Thought Prompting Elicits Reasoning in Large Language Models}, 
+      author={Jason Wei and Xuezhi Wang and Dale Schuurmans and Maarten Bosma and Brian Ichter and Fei Xia and Ed Chi and Quoc Le and Denny Zhou},
+      year={2023},
+      eprint={2201.11903},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2201.11903}, 
+}
+```
+---
+
+## 8. Canonical Examples
 
 ### Example 1: Inference shift (split)
 
