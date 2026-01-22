@@ -1,9 +1,16 @@
 # RT-SEG
 
-sdb_login.json file expected in /data/ :
+This project requires a configuration file for database authentication.
 
-{"user": "", <-- fill
-"pwd": "", <-- fill
-"ns": "NR",
-"db": "RT",
-"url": "ws://gondor.hucompute.org:8383"}
+### 🔐 Configuration Setup
+
+Please ensure the `sdb_login.json` file is located in the `/data/` directory with the following structure:
+
+```json
+{
+  "user": "", 
+  "pwd": "", 
+  "ns": "NR",
+  "db": "RT",
+  "url": "ws://gondor.hucompute.org:8383"
+}
