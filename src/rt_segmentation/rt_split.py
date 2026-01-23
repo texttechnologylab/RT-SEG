@@ -189,35 +189,18 @@ class RTRuleBased:
 
 
 class RTLLMBased:
-    SYSTEM_PROMPT = """You are a text segmentation assistant.
+    @staticmethod
+    @lru_cache(maxsize=10)
+    def get_prompt(prompt_id: str):
+        with open(f"{bp()}/data/prompts.json", "r") as f:
+            prompts = json.load(f)
+        return prompts[prompt_id]
 
-Your task is to segment an input text into contiguous reasoning segments and return only their character offsets.
+    @staticmethod
+    @lru_cache(maxsize=1)
+    def load_tokenizer():
+        return PunktSentenceTokenizer()
 
-You must not:
-- add, remove, rewrite, or explain any content
-- assign labels or categories
-- interpret correctness
-- change segmentation granularity beyond what is present
-
-You must:
-- segment the text wherever the function of the reasoning clearly changes (e.g. description → analysis → conclusion)
-- preserve the original order
-- ensure that all characters are covered exactly once
-- use character offsets relative to the full input string
-
-OFFSET RULES:
-- Use 0-based character indexing
-- Format: [start_offset, end_offset) (end offset is exclusive)
-- Segments must be contiguous and non-overlapping
-
-OUTPUT FORMAT:
-Return only a JSON array of offset pairs, nothing else:
-{
-  [start, end],
-  [start, end],
-  ...
-}"""
-    PROMPT = "Segment the following text into reasoning segments according to the system instructions.\n\nTEXT TO SEGMENT (use exact character positions and return the offsets in json format):"
     @staticmethod
     @lru_cache(maxsize=1)
     def load_model(model_name: Literal[
@@ -252,7 +235,7 @@ Return only a JSON array of offset pairs, nothing else:
         model, tokenizer = RTLLMBased.load_model(model_name)
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"{prompt}\n\n{trace}"}
+            {"role": "user", "content": f"{prompt}{trace}"}
         ]
         text = tokenizer.apply_chat_template(
             messages,
@@ -272,6 +255,7 @@ Return only a JSON array of offset pairs, nothing else:
         response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
         return response
 
+
     @staticmethod
     def segment_with_chunk_retry(
             trace: str,
@@ -285,95 +269,140 @@ Return only a JSON array of offset pairs, nothing else:
             margin: int = 200,
             max_retries_per_chunk: int = 10,
     ) -> List[Tuple[int, int]]:
-        """
-        Segments a long trace using chunking + retry-on-incomplete-coverage.
-
-        Returns global character offsets.
-        """
 
         all_segments: List[Tuple[int, int]] = []
-        carryover = ""
 
         i = 0
-        while i < len(trace):
-            # Build chunk with carryover
+        while i < max(0, len(trace) - 20):
+            # Build chunk with carryover (carryover is CONTEXT, not to be re-segmented)
             base_chunk = trace[i:i + chunk_size]
-            chunk = carryover + base_chunk
-            chunk_start_global = i - len(carryover)
 
-            cursor = 0
-            retries = 0
+            response = RTLLMBased._segment(
+                base_chunk, "", system_prompt, model_name
+            )
+            # --- robust JSON parsing ---
+            try:
+                print(base_chunk)
+                print(response)
+                response = response.strip()
+                response = response[response.find("["):response.rfind("]") + 1]
+                local_segments = json.loads(response)
 
-            while retries < max_retries_per_chunk:
-                retries += 1
+                if isinstance(local_segments, dict):
+                    local_segments = list(local_segments.values())
 
-                sub_chunk = chunk[cursor:]
-                if not sub_chunk.strip():
-                    break
+                if (
+                        isinstance(local_segments, list)
+                        and len(local_segments) == 2
+                        and all(isinstance(x, int) for x in local_segments)
+                ):
+                    local_segments = [local_segments]
 
-                response = RTLLMBased._segment(sub_chunk, prompt, system_prompt, model_name)
-                try:
-                    local_segments = json.loads(response)
-                except Exception:
-                    # Model produced garbage → stop this chunk
-                    break
-                # print(local_segments)
-                if not local_segments:
-                    break
+            except Exception:
+                continue  # malformed output → stop this chunk
 
-                # Convert to chunk-relative offsets
-                shifted = []
-                for start, end in local_segments:
-                    shifted.append((start + cursor, end + cursor))
+            if not local_segments:
+                break
 
-                # Append globalized offsets
-                for start, end in shifted:
-                    global_start = chunk_start_global + start
-                    global_end = chunk_start_global + end
+            for seg in local_segments:
+                all_segments.append((i + seg[0], i + seg[1]))
+            i = all_segments[-1][1]
 
-                    # Ensure monotonicity
-                    if all_segments and global_start < all_segments[-1][1]:
-                        continue
-
-                    all_segments.append((global_start, global_end))
-
-                last_end = shifted[-1][1]
-
-                # If close enough to chunk end, stop retrying
-                if len(chunk) - last_end <= margin:
-                    cursor = last_end
-                    break
-
-                # Otherwise continue from last boundary
-                cursor = last_end
-
-            # Prepare carryover for next chunk
-            carryover = chunk[cursor:]
-            i += chunk_size
-
-        print(all_segments)
-        """# Final safety: ensure full coverage
-        if all_segments:
-            last_end = all_segments[-1][1]
-            if last_end < len(trace):
-                all_segments.append((last_end, len(trace)))"""
+        if i < len(trace):
+            all_segments.append((i, len(trace)))
 
         return all_segments
 
+    @staticmethod
+    def segment_with_sentence_chunks(
+            trace: str,
+            chunk_size: int,
+            prompt: str,
+            system_prompt: str,
+            model_name: Literal[
+                "Qwen/Qwen2.5-7B-Instruct-1M",
+                "mistralai/Mixtral-8x7B-Instruct-v0.1",
+                "Qwen/Qwen2.5-7B-Instruct"]
+    ) -> List[Tuple[int, int]]:
 
+        all_segments: List[Tuple[int, int]] = []
+
+        offsets = list(RTLLMBased.load_tokenizer().span_tokenize(trace))
+        # trace = nltk.sent_tokenize(trace)
+        strace = [trace[tr[0]:tr[1]] for tr in offsets]
+
+        i = 0
+        while i < max(0, len(strace) - 1):
+            # Build chunk with carryover (carryover is CONTEXT, not to be re-segmented)
+            base_chunk = strace[i:i + chunk_size]
+            base_chunk_input = json.dumps({idx: sent for idx, sent in enumerate(base_chunk)})
+            response = RTLLMBased._segment(
+                base_chunk_input, "", system_prompt, model_name
+            )
+            # --- robust JSON parsing ---
+            try:
+                print(base_chunk)
+                print(response)
+                response = response.strip()
+                response = response[response.find("["):response.rfind("]") + 1]
+                local_segments = json.loads(response)
+
+                if isinstance(local_segments, dict):
+                    local_segments = list(local_segments.values())
+
+                if (
+                        isinstance(local_segments, list)
+                        and len(local_segments) == 1
+                        and all(isinstance(x, int) for x in local_segments)
+                ):
+                    local_segments = [local_segments]
+
+            except Exception:
+                continue  # malformed output → stop this chunk
+
+            if not local_segments:
+                break
+
+            for seg in local_segments:
+                all_segments.append([s + i for s in seg])
+            check_seg = [s + i for s in local_segments[-1]]
+            i = min(check_seg)
+            if max(check_seg) >= len(strace) - 2:
+                break
+            else:
+                del all_segments[-1]
+
+
+        if i < len(strace):
+            all_segments.append((i, len(strace)))
+
+        final_offsets = []
+        print(all_segments)
+        for seg in all_segments:
+            try:
+                left_boundary = offsets[seg[0]][0]
+            except IndexError:
+                left_boundary = len(trace)
+            try:
+                right_boundary = offsets[seg[-1]][1]
+            except IndexError:
+                right_boundary = len(trace)
+
+            final_offsets.append((left_boundary, right_boundary))
+        return final_offsets
 
 
 if __name__ == "__main__":
     # new_line_split()
     # RTRuleBased.rule_split()
-    trace = """
+    trc = """
 We assume A implies B and B implies C.
 Therefore C holds.
 But this assumption is incorrect.
 Let me reconsider the premises.
 The answer is C.
 """
-    trace = """Okay, let's try to figure out this problem. The question is asking for the sum of all integer bases b > 9 where 17_b is a divisor of 97_b. Hmm, first I need to understand what these numbers mean in different bases.
+    trc = """Okay, let's try to figure out this problem. The question is asking for the sum of all integer bases b > 9 where 17_b is a divisor of 97_b. Hmm, first I need to understand what these numbers mean in different bases.
 
 So, in base b, the number 17_b would be equal to 1*b^1 + 7*b^0, which simplifies to b + 7. Similarly, 97_b is 9*b^1 + 7*b^0, so that's 9b + 7. The problem states that 17_b divides 97_b, meaning that (9b + 7) divided by (b + 7) should be an integer. So, I need to find all bases b > 9 where (9b + 7)/(b + 7) is an integer.
 
@@ -410,18 +439,26 @@ Therefore, the final answer is 70. Let me check if that's correct. Yes, seems ri
     print(res)
     for idx, r in enumerate(res):
         print(trace[r[0]:r[1]])"""
+    # mxtral: 123
     s = time.time()
-    res = RTLLMBased.segment_with_chunk_retry(trace=trace,
-                                              chunk_size=400,
+    """res = RTLLMBased.segment_with_chunk_retry(trace=trc,
+                                              chunk_size=700,
                                               prompt=RTLLMBased.PROMPT,
                                               system_prompt=RTLLMBased.SYSTEM_PROMPT,
-                                              model_name="mistralai/Mixtral-8x7B-Instruct-v0.1",
+                                              model_name="Qwen/Qwen2.5-7B-Instruct-1M",
                                               margin=100,
-                                              max_retries_per_chunk=10)
+                                              max_retries_per_chunk=10)"""
+    res = RTLLMBased.segment_with_sentence_chunks(trace=trc,
+                                              chunk_size=20,
+                                              prompt="",
+                                              system_prompt=RTLLMBased.get_prompt("system_prompt_sentbased"),
+                                              model_name="Qwen/Qwen2.5-7B-Instruct")
     e = time.time()
     print(res)
     print(e-s)
-    """for idx, r in enumerate(res):
-        print(trace[r[0]:r[1]])"""
+    for idx, r in enumerate(res):
+        #print(trc[r[0]:r[1]])
+        #print("-"*10)
+        pass
 
 
