@@ -5,7 +5,7 @@ import random
 import time
 from collections import Counter
 from functools import lru_cache
-from typing import List, Dict, Tuple, Literal
+from typing import List, Dict, Tuple, Literal, Any
 from datasets import load_dataset
 import torch
 from datasets import Dataset, concatenate_datasets
@@ -17,7 +17,7 @@ import re
 import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.tokenize import PunktSentenceTokenizer
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, DynamicCache
 
 from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
 
@@ -168,8 +168,8 @@ class RTLLMBased:
             )
             # --- robust JSON parsing ---
             try:
-                print(base_chunk)
-                print(response)
+                #print(base_chunk)
+                #print(response)
                 response = response.strip()
                 response = response[response.find("["):response.rfind("]") + 1]
                 local_segments = json.loads(response)
@@ -204,7 +204,7 @@ class RTLLMBased:
             all_segments.append([sid for sid in range(max(all_segments[-1]), len(strace) - 1)])
 
         final_offsets = []
-        print(all_segments)
+        # print(all_segments)
         for seg in all_segments:
             try:
                 left_boundary = offsets[seg[0]][0]
@@ -216,4 +216,39 @@ class RTLLMBased:
                 right_boundary = len(trace)
 
             final_offsets.append((left_boundary, right_boundary))
-        return final_offsets
+
+        corrected_final_offsets = []
+        for idx, offset in enumerate(final_offsets[:-1]):
+            corrected_final_offsets.append((offset[0], final_offsets[idx + 1][0]))
+        corrected_final_offsets.append(final_offsets[-1])
+        return corrected_final_offsets
+
+    @staticmethod
+    def segment():
+        login_data = sdb_login()
+        with Surreal(login_data["url"]) as db:
+            db.signin({"username": login_data["user"], "password": login_data["pwd"]})
+            db.use(login_data["ns"], login_data["db"])
+            db.query("REMOVE TABLE llm_sent_chunk_split;")
+            db.query("DEFINE TABLE llm_sent_chunk_split SCHEMALESS;")
+            db.query("DEFINE INDEX idx_llm_sent_chunk_split_id ON llm_sent_chunk_split FIELDS id;")
+
+            db.query("REMOVE TABLE has_llm_sent_chunk_split;")
+            db.query("DEFINE TABLE has_llm_sent_chunk_split SCHEMALESS TYPE RELATION IN rtrace OUT llm_sent_chunk_split;")
+            db.query("DEFINE INDEX idx_rt_id ON has_llm_sent_chunk_split FIELDS id;")
+            db.query("DEFINE INDEX idx_rt_in ON has_llm_sent_chunk_split FIELDS in;")
+            db.query("DEFINE INDEX idx_rt_out ON has_llm_sent_chunk_split FIELDS out;")
+
+            results = db.query("SELECT * from rtrace")
+
+            for res in results:
+                rt = res.get("rt")
+                offsets = RTLLMBased.segment_with_sentence_chunks(trace=rt,
+                                                                  chunk_size=40,
+                                                                  prompt="",
+                                                                  system_prompt=load_prompt("system_prompt_sentbased"),
+                                                                  model_name="Qwen/Qwen2.5-7B-Instruct")
+
+                split_id = RecordID("llm_sent_chunk_split", res.get("id").id)
+                db.upsert(split_id, {"split": offsets})
+                db.insert_relation("has_llm_sent_chunk_split", {"in": res.get("id"), "out": split_id})
