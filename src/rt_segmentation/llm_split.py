@@ -17,6 +17,7 @@ import re
 import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.tokenize import PunktSentenceTokenizer
+from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer, DynamicCache
 
 from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
@@ -149,7 +150,8 @@ class RTLLMBased:
             model_name: Literal[
                 "Qwen/Qwen2.5-7B-Instruct-1M",
                 "mistralai/Mixtral-8x7B-Instruct-v0.1",
-                "Qwen/Qwen2.5-7B-Instruct"]
+                "Qwen/Qwen2.5-7B-Instruct"],
+            max_retry: int = 30
     ) -> List[Tuple[int, int]]:
 
         all_segments: List[Tuple[int, int]] = []
@@ -157,7 +159,7 @@ class RTLLMBased:
         offsets = list(RTLLMBased.load_tokenizer().span_tokenize(trace))
         # trace = nltk.sent_tokenize(trace)
         strace = [trace[tr[0]:tr[1]] for tr in offsets]
-
+        retry = 0
         i = 0
         while i < max(0, len(strace) - 1):
             # Build chunk with carryover (carryover is CONTEXT, not to be re-segmented)
@@ -184,7 +186,15 @@ class RTLLMBased:
                 ):
                     local_segments = [local_segments]
 
-            except Exception:
+            except Exception as e:
+                print(50*"=")
+                print(e)
+                print(response)
+                print(50 * "=")
+                if retry < max_retry:
+                    retry += 1
+                else:
+                    raise e
                 continue  # malformed output → stop this chunk
 
             if not local_segments:
@@ -192,12 +202,16 @@ class RTLLMBased:
 
             for seg in local_segments:
                 all_segments.append([s + i for s in seg])
+
+
             check_seg = [s + i for s in local_segments[-1]]
             i = min(check_seg)
             if max(check_seg) >= len(strace) - 2:
                 break
             else:
                 del all_segments[-1]
+                if len(check_seg) == chunk_size:
+                    chunk_size += 5
 
 
         if max(all_segments[-1]) < len(strace) - 1:
@@ -224,30 +238,35 @@ class RTLLMBased:
         return corrected_final_offsets
 
     @staticmethod
-    def segment():
+    def segment(wipe: bool = False):
         login_data = sdb_login()
         with Surreal(login_data["url"]) as db:
             db.signin({"username": login_data["user"], "password": login_data["pwd"]})
             db.use(login_data["ns"], login_data["db"])
-            db.query("REMOVE TABLE llm_sent_chunk_split;")
-            db.query("DEFINE TABLE llm_sent_chunk_split SCHEMALESS;")
-            db.query("DEFINE INDEX idx_llm_sent_chunk_split_id ON llm_sent_chunk_split FIELDS id;")
+            if wipe:
+                db.query("REMOVE TABLE llm_sent_chunk_split;")
+                db.query("DEFINE TABLE llm_sent_chunk_split SCHEMALESS;")
+                db.query("DEFINE INDEX idx_llm_sent_chunk_split_id ON llm_sent_chunk_split FIELDS id;")
 
-            db.query("REMOVE TABLE has_llm_sent_chunk_split;")
-            db.query("DEFINE TABLE has_llm_sent_chunk_split SCHEMALESS TYPE RELATION IN rtrace OUT llm_sent_chunk_split;")
-            db.query("DEFINE INDEX idx_rt_id ON has_llm_sent_chunk_split FIELDS id;")
-            db.query("DEFINE INDEX idx_rt_in ON has_llm_sent_chunk_split FIELDS in;")
-            db.query("DEFINE INDEX idx_rt_out ON has_llm_sent_chunk_split FIELDS out;")
+                db.query("REMOVE TABLE has_llm_sent_chunk_split;")
+                db.query("DEFINE TABLE has_llm_sent_chunk_split SCHEMALESS TYPE RELATION IN rtrace OUT llm_sent_chunk_split;")
+                db.query("DEFINE INDEX idx_rt_id ON has_llm_sent_chunk_split FIELDS id;")
+                db.query("DEFINE INDEX idx_rt_in ON has_llm_sent_chunk_split FIELDS in;")
+                db.query("DEFINE INDEX idx_rt_out ON has_llm_sent_chunk_split FIELDS out;")
 
-            results = db.query("SELECT * from rtrace")
+            results = db.query("SELECT *, ->has_llm_sent_chunk_split->llm_sent_chunk_split.* as seg from rtrace where ->has_llm_sent_chunk_split->llm_sent_chunk_split == [] and string::len(rt) < 20000 ")
 
-            for res in results:
+            for res in tqdm(results, desc=f"Segmenting traces with LLM"):
                 rt = res.get("rt")
-                offsets = RTLLMBased.segment_with_sentence_chunks(trace=rt,
-                                                                  chunk_size=40,
-                                                                  prompt="",
-                                                                  system_prompt=load_prompt("system_prompt_sentbased"),
-                                                                  model_name="Qwen/Qwen2.5-7B-Instruct")
+                try:
+                    offsets = RTLLMBased.segment_with_sentence_chunks(trace=rt,
+                                                                      chunk_size=40,
+                                                                      prompt="",
+                                                                      system_prompt=load_prompt("system_prompt_sentbased"),
+                                                                      model_name="Qwen/Qwen2.5-7B-Instruct")
+                except Exception as e:
+                    print(e)
+                    continue
 
                 split_id = RecordID("llm_sent_chunk_split", res.get("id").id)
                 db.upsert(split_id, {"split": offsets})
