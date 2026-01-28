@@ -3,7 +3,7 @@ import time
 from rt_segmentation import (RTLLMOffsetBased,
                              RTLLMForcedDecoderBased,
                              RTLLMSentBased,
-                             RTRuleBased,
+                             RTRuleRegex,
                              RTNewLine,
                              bp,
                              sdb_login,
