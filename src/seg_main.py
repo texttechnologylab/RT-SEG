@@ -8,7 +8,7 @@ from rt_segmentation import (RTLLMOffsetBased,
                              bp,
                              sdb_login,
                              load_prompt,
-                             load_example_trace, RTLLMSurprisal, RTLLMEntropy)
+                             load_example_trace, RTLLMSurprisal, RTLLMEntropy, RTLLMTopKShift)
 
 
 def test():
@@ -57,7 +57,18 @@ def test4():
         print(50 * "=")
         print(load_example_trace("trc1")[ofs[0]:ofs[1]])
 
+
+def test5():
+    offsets = RTLLMTopKShift._segment(trace=load_example_trace("trc1"),
+                                               system_prompt=load_prompt("system_prompt_surprisal"),
+                                               model_name="Qwen/Qwen2.5-7B-Instruct")
+    print(offsets)
+    for ofs in offsets:
+        print(50 * "=")
+        print(load_example_trace("trc1")[ofs[0]:ofs[1]])
+
+
 if __name__ == "__main__":
     # RTLLMBased.segment()
-    test4()
+    test5()
 
