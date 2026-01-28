@@ -23,7 +23,7 @@ import numpy as np
 from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
 
 
-class RTLLMSurprisal:
+class RTLLMEntropy:
     PUNCTUATION = {".", "!", "?", "\n"}
     SOFT_PUNCTUATION = {",", "\t", ";", ":"}
 
@@ -76,7 +76,7 @@ class RTLLMSurprisal:
         """
         First pass: compute normalized "gap" scores for separator insertion.
         """
-        model, tokenizer = RTLLMSurprisal.load_model(model_name
+        model, tokenizer = RTLLMEntropy.load_model(model_name
                                                               )
         model.eval()
         messages = [
@@ -97,17 +97,15 @@ class RTLLMSurprisal:
             out = model(input_ids=input_ids, past_key_values=past_key_values, use_cache=True)
             past_key_values = out.past_key_values
             if past_key_values is not None:
-                past_key_values = RTLLMSurprisal.truncate_kv_dynamic(past_key_values, max_kv_tokens)
+                past_key_values = RTLLMEntropy.truncate_kv_dynamic(past_key_values, max_kv_tokens)
 
         scores = []
         while trace_ptr < len(trace_ids):
             logits = out.logits[0, -1]
-            log_probs = torch.log_softmax(logits, dim=-1)
+            probs = torch.softmax(logits, dim=-1)
             true_id = trace_ids[trace_ptr]
-            # last_char = decoded_so_far[-1] if decoded_so_far else ""
-            true_logp = log_probs[true_id]
-
-            scores.append(-true_logp.item())
+            entropy = -torch.sum(probs * torch.log(probs + 1e-12))
+            scores.append(entropy.item())
             # force true token
             next_id = torch.tensor([[true_id]], device=model.device)
             decoded_so_far += tokenizer.decode([true_id], skip_special_tokens=False)
@@ -118,12 +116,11 @@ class RTLLMSurprisal:
                 out = model(input_ids=next_id, past_key_values=past_key_values, use_cache=True)
                 past_key_values = out.past_key_values
                 if past_key_values is not None:
-                    past_key_values = RTLLMSurprisal.truncate_kv_dynamic(past_key_values, max_kv_tokens)
+                    past_key_values = RTLLMEntropy.truncate_kv_dynamic(past_key_values, max_kv_tokens)
 
         assert len(trace_ids) == len(scores)
         deltas = []
-        punc_ids = [tokenizer.get_vocab().get(p) for p in RTLLMSurprisal.PUNCTUATION]
-
+        punc_ids = [tokenizer.get_vocab().get(p) for p in RTLLMEntropy.PUNCTUATION]
         for idx in range(window, len(scores) - window):
             prev = np.mean(scores[idx - window:idx])
             nex = np.mean(scores[idx:idx + window])
@@ -132,7 +129,6 @@ class RTLLMSurprisal:
 
         delta_z = (np.array(deltas) - np.mean(deltas)) / (np.std(deltas) + 1e-6)
         threshold = np.percentile(delta_z, q=quantile)
-
         decoded_so_far = ""
         char_cursor = 0
         boundaries = [0]
@@ -146,7 +142,7 @@ class RTLLMSurprisal:
                 # d = jdx - last_split_sentence_idx
                 # multiplier = 2 - min(d / 5, 1)
                 # dynamic_threshold = threshold * multiplier
-                # print(delta_z[jdx], threshold, delta_z[jdx] < threshold)
+                print(delta_z[jdx], threshold, delta_z[jdx] < threshold)
                 # print(delta_z[jdx], dynamic_threshold, delta_z[jdx] < dynamic_threshold)
                 if delta_z[jdx] < threshold:
                     boundaries.append(char_cursor)
@@ -160,7 +156,7 @@ class RTLLMSurprisal:
             idx += 1
 
         boundaries.append(len(trace))
-        # print(boundaries)
+        print(boundaries)
         segments = [(a, b) for a, b in zip(boundaries[:-1], boundaries[1:]) if a < b]
         return segments
 
@@ -172,11 +168,12 @@ class RTLLMSurprisal:
                      "mistralai/Mixtral-8x7B-Instruct-v0.1",
                      "Qwen/Qwen2.5-7B-Instruct"],
                  max_kv_tokens: int = 512,
-                    window: int = 15,
+                    window: int = 30,
                  quantile: int = 10):
-        return RTLLMSurprisal._trace_pass(trace=trace,
+        return RTLLMEntropy._trace_pass(trace=trace,
                                           system_prompt=system_prompt,
                                           model_name=model_name,
                                           max_kv_tokens=max_kv_tokens,
                                           window=window,
                                           quantile=quantile)
+
