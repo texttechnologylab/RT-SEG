@@ -77,6 +77,7 @@ def test6():
         print(50 * "=")
         print(load_example_trace("trc1")[ofs[0]:ofs[1]])
 
+
 if __name__ == "__main__":
     # RTLLMBased.segment()
     test4()
