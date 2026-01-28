@@ -173,7 +173,7 @@ class RTLLMSurprisal:
                      "Qwen/Qwen2.5-7B-Instruct"],
                  max_kv_tokens: int = 512,
                     window: int = 15,
-                 quantile: int = 5):
+                 quantile: int = 10):
         return RTLLMSurprisal._trace_pass(trace=trace,
                                           system_prompt=system_prompt,
                                           model_name=model_name,
