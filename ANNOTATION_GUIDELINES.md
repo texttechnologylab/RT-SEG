@@ -21,37 +21,42 @@ An epistemic function describes *what role* a span plays in the reasoning (e.g.,
 
 ## 3. When to Insert a Boundary
 
-Insert a boundary **between two sentences** if the later sentence introduces a **new epistemic function**.
+Insert a boundary **between two sentences** whenever a reasoning step ends. A step ends if:
+
+1. The epistemic function **changes** (e.g., Framing → Inference → Pivot), **or**
+2. The current reasoning step is **complete**, even if the function remains the same.
+
+> Note: This ensures that repeated reasoning steps of the same function (e.g., multiple consecutive Inference steps) are treated as separate segments.
 
 Boundaries may occur even if:
-- [the topic stays the same] ?
-- the same entities are discussed
-- similar vocabulary is reused
+- The topic stays the same
+- The same entities are discussed
+- Similar vocabulary is reused
+
+**Example:**
+
+```
+
+Sentence 1: Assume x > 0.       → Framing (segment 1)
+Sentence 2: Assume y > 0.       → Framing (segment 2, new segment)
+Sentence 3: Therefore x + y > 0 → Inference (segment 3, new segment)
+
+```
 
 ---
 
 ## 4. Epistemic Functions (Reference Inventory)
 
 Use the following functions as guidance for identifying boundaries.  
-You **do not need to label them**, only decide whether the function changes.
+You **do not need to label them**, only decide whether a new reasoning step has begun.
 
-1. **Assumption / Setup**  
-   Introducing premises, constraints, or known facts. [Grounds, Backing, Warrant]
-
-2. **Intermediate Inference**  
-   Deriving new information from prior content. [Claim]
-
-3. **Contrast / Objection**  
-   Introducing alternatives, counterarguments, or limitations. [Rebuttal, Qualifier]
-
-4. **Revision / Correction**  
-   Retracting, correcting, or reconsidering earlier reasoning.
-
-5. **Goal Management**  
-   Stating subgoals, plans, or next reasoning steps.
-
-6. **Conclusion / Answer**  
-   Presenting a final result or summarizing outcome.
+| Function | Description | Clues / Keywords |
+|----------|------------|----------------|
+| **1. Framing** | Setting the stage: restating the goal, defining variables, or listing known constraints. | "Let $x$ be...", "We need to find...", "The rules are..." |
+| **2. Inference** | The proactive "forward" step: deriving new information, performing math, or narrowing the search space. | "Therefore...", "This means...", "If A, then B..." |
+| **3. Pivot** | A change in direction: includes self-correction, identifying errors, or switching strategies. | "Wait...", "Actually...", "Alternatively...", "On the other hand..." |
+| **4. Verification** | Checking the work: not deriving new info, but validating that the current path/result is consistent. | "Let's double check...", "This matches the constraint...", "Testing this value..." |
+| **5. Conclusion** | The final landing: explicitly stating the answer or a final summary. | "So, the final answer is...", "In conclusion..." |
 
 ---
 
@@ -66,14 +71,32 @@ You **do not need to label them**, only decide whether the function changes.
 
 ## 6. Granularity Rules
 
-- [**Do not split** minor paraphrases or restatements] ?
-- **Do not split** arithmetic or symbolic chains unless interrupted
-- **Do split** when the *role* of the text changes, even subtly
+- **Do not split** minor paraphrases or restatements
+- **Do not split** arithmetic or symbolic chains unless interrupted by explanation, verification, or pivot
+- **Do split** when the *role* of the text changes, or when a reasoning step ends, even if the function remains the same
 - When in doubt, **do not split**
 
 ---
 
-## 7. Literature Examples
+## 7. Edge Cases
+
+- **Consecutive steps of the same function:** Each step counts as a new segment (e.g., multiple inferences in a row are separate)
+- **Meta-comments:** Statements like "Let’s think carefully" start a new segment only if they indicate a goal or strategy change
+- **Repetition:** Rephrasing or restating a previous step does **not** create a new segment
+- **Arithmetic or symbolic reasoning chains:** Treat as one segment unless interrupted by verification, pivot, or explanation
+
+---
+
+## 8. What Not to Annotate
+
+- Logical validity
+- Factual correctness
+- Implicit or unstated reasoning
+- How a human *should* reason
+
+Focus only on the **epistemic role of the explicit text**.
+
+## 9. Literature Examples
 Overall:
 - discourse segmentation
 - argumentation / reasoning structure

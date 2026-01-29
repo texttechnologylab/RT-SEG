@@ -1,0 +1,118 @@
+import json
+import random
+from functools import lru_cache
+from typing import List, Dict, Tuple, Literal, Any
+from datasets import load_dataset
+import torch
+from datasets import Dataset, concatenate_datasets
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from surrealdb import Surreal, RecordID
+from typing import List
+import re
+import nltk
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.tokenize import PunktSentenceTokenizer
+from tqdm import tqdm
+from transformers import AutoModelForCausalLM, AutoTokenizer, DynamicCache
+import numpy as np
+
+from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
+
+
+
+
+def export_rt(trace: str, trace_id: Any, model: str, ds_origin: str):
+    offsets = PunktSentenceTokenizer().span_tokenize(trace)
+    offsets = [*offsets]
+    html_parts = []
+
+    box_style = (
+        "border: 1px solid #d1d5db; "
+        "border-radius: 8px; "
+        "padding: 16px; "
+        "background: #ffffff; "
+        "box-shadow: 0 2px 4px rgba(0,0,0,0.08); "
+        "font-family: system-ui, sans-serif; "
+        "line-height: 1.6;"
+    )
+    sentences = [trace[off[0]:off[-1]] for off in offsets]
+
+    for i, sentence in enumerate(sentences, start=1):
+        # Escape double quotes in sentence if any (safe for JSON + HTML)
+        safe_sentence = sentence.replace('"', '\\"')
+
+        box = (
+            f'<div style="margin-bottom: 20px;">'
+            f'<div style="{box_style}">'
+            f'{safe_sentence}'
+            f'</div></div>'
+        )
+        html_parts.append(box)
+
+    full_html = "".join(html_parts)
+
+    return {
+        "id": trace_id,
+        "data": {"html": full_html,
+                 "model": model,
+                 "ds_origin": ds_origin,
+                 "offsets": offsets,
+                 "sdb_id": trace_id}
+    }
+
+
+def export_gold_set():
+    login_data = sdb_login()
+    missing = []
+    ds = []
+    tasks = ["gpqa", "aime25", "hle"]
+    models = ["gpt-oss:120b", "deepseek-r1:70b",
+             "deepseek-r1:32b", "magistral:24b",
+             "gpt-oss:20b", "qwen3:1.7b",
+             "qwen3:8b", "qwen3:32b",
+             "deepseek-r1:8b", "deepseek-r1:1.5b"]
+    for task in tqdm(tasks, desc="Exporting gold set"):
+        for model in models:
+            with Surreal(login_data["url"]) as db:
+                db.signin({"username": login_data["user"], "password": login_data["pwd"]})
+                db.use(login_data["ns"], login_data["db"])
+                res = db.query(f'SELECT rt, id, ds_origin, model from rtrace where string::len(rt) < 20000 and model="{model}" and ds_origin="{task}" and correct=true')
+                if res:
+                    target = random.choice(res)
+                    ds.append(export_rt(target.get("rt"), target.get("id").id, model, task))
+                else:
+                    missing.append((model, task))
+
+    for item in missing:
+        with Surreal(login_data["url"]) as db:
+            db.signin({"username": login_data["user"], "password": login_data["pwd"]})
+            db.use(login_data["ns"], login_data["db"])
+            while True:
+                res = db.query(
+                    f'SELECT rt, id, ds_origin, model from rtrace where string::len(rt) < 20000 and model="gpt-oss:120b" and ds_origin="{item[-1]}" and correct=true')
+
+                target = random.choice(res)
+                if target.get("id").id not in [tra.get("id") for tra in ds]:
+                    ds.append(export_rt(target.get("rt"), target.get("id").id, item[0], item[-1]))
+                    break
+                else:
+                    continue
+
+    for model in tqdm([f"human_stage{idx}" for idx in range(1, 5)], desc="Exporting human set"):
+        with Surreal(login_data["url"]) as db:
+            db.signin({"username": login_data["user"], "password": login_data["pwd"]})
+            db.use(login_data["ns"], login_data["db"])
+            res = db.query(
+                f'SELECT rt, id, ds_origin, model from rtrace where string::len(rt) < 20000 and model="{model}" and ds_origin="nemo"')
+            targets = random.sample(res, min(3, len(res)))
+            for target in targets:
+                ds.append(export_rt(target.get("rt"), target.get("id").id, model, "nemo"))
+
+    print(len(ds), len(missing))
+    with open(f"{bp()}/data/label_studio/ls_data.json", "w") as f:
+        json.dump(ds, f, indent=4)
+
+
+if __name__ == "__main__":
+    export_gold_set()

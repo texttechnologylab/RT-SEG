@@ -8,7 +8,8 @@ from rt_segmentation import (RTLLMOffsetBased,
                              bp,
                              sdb_login,
                              load_prompt,
-                             load_example_trace, RTLLMSurprisal, RTLLMEntropy, RTLLMTopKShift, RTLLMFlatnessBreak)
+                             load_example_trace, RTLLMSurprisal, RTLLMEntropy, RTLLMTopKShift, RTLLMFlatnessBreak,
+                             export_gold_set)
 
 
 def test():
@@ -80,5 +81,6 @@ def test6():
 
 if __name__ == "__main__":
     # RTLLMBased.segment()
-    test4()
+    # test4()
+    export_gold_set()
 
