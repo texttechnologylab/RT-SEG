@@ -135,6 +135,7 @@ def test_RTEntailmentBasedSegmentation():
     assert isinstance(offsets[0][0], int) and isinstance(offsets[0][1], int)
     assert isinstance(labels[0], str)
 
+
 if __name__ == "__main__":
     pytest.main([
         "-v",
