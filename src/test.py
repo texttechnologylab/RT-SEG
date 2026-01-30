@@ -11,6 +11,7 @@ from rt_segmentation import (RTLLMOffsetBased,
                              load_prompt,
                              load_example_trace, RTLLMSurprisal, RTLLMEntropy, RTLLMTopKShift, RTLLMFlatnessBreak,
                              export_gold_set)
+from src.rt_segmentation.bertopic_segmentation import RTBERTopicSegmentation
 from src.rt_segmentation.zeroshot_seq_classification import RTZeroShotSeqClassification
 
 
@@ -83,6 +84,33 @@ def test7():
     assert isinstance(offsets[0], tuple) or isinstance(offsets[0], list)
     assert isinstance(offsets[0][0], int) and isinstance(offsets[0][1], int)
     assert isinstance(labels[0], str)
+
+import pytest
+
+@pytest.mark.parametrize("use_trace", ["trc1", "trc2"])
+def test_segmentation(use_trace):
+    trace_data = load_example_trace(use_trace)
+    offsets, labels = RTBERTopicSegmentation._segment(trace=trace_data)
+
+    for ofs, label in zip(offsets, labels):
+        print(50 * "=")
+        print(trace_data[ofs[0]:ofs[1]])
+        print(label)
+
+    # Assertions
+    assert isinstance(offsets, list)
+    assert isinstance(labels, list)
+    assert isinstance(offsets[0], (tuple, list))
+    assert isinstance(offsets[0][0], int)
+    assert isinstance(offsets[0][1], int)
+    assert isinstance(labels[0], str)
+
+    if use_trace == "trc1":
+        assert labels[0] == "Example"
+    elif use_trace == "trc2":
+        # bertopic topics are by default labelled with topic number appended by top 10 representative word separated by underscore
+        assert labels[0][0].isdigit()
+
 
 if __name__ == "__main__":
     pytest.main([
