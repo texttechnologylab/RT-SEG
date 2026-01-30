@@ -9,3 +9,4 @@ surrealdb
 scikit-learn
 accelerate
 pytest
+textual

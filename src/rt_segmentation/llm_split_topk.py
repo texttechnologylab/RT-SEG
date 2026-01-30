@@ -181,10 +181,11 @@ class RTLLMTopKShift(SegBase):
                  window: int = 15,
                  quantile: int = 90,
                  **kwargs):
-        return RTLLMTopKShift._trace_pass(trace=trace,
+        offsets = RTLLMTopKShift._trace_pass(trace=trace,
                                           system_prompt=system_prompt,
                                           model_name=model_name,
                                           max_kv_tokens=max_kv_tokens,
                                           top_k=top_k,
                                           window=window,
                                           quantile=quantile)
+        return offsets, ["UNK" for _ in offsets]

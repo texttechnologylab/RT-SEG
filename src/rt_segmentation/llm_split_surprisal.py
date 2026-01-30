@@ -176,9 +176,10 @@ class RTLLMSurprisal(SegBase):
                     window: int = 15,
                  quantile: int = 10,
                  **kwargs):
-        return RTLLMSurprisal._trace_pass(trace=trace,
+        offsets =  RTLLMSurprisal._trace_pass(trace=trace,
                                           system_prompt=system_prompt,
                                           model_name=model_name,
                                           max_kv_tokens=max_kv_tokens,
                                           window=window,
                                           quantile=quantile)
+        return offsets, ["UNK" for _ in offsets]

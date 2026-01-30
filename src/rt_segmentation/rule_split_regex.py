@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, Literal
+from typing import List, Dict, Tuple, Literal, Any
 from surrealdb import Surreal, RecordID
 from typing import List
 import re
@@ -80,7 +80,7 @@ class RTRuleRegex(SegBase):
     # Segment offsets
     # -----------------------------
     @staticmethod
-    def _segment(trace: str, **kwargs) -> List[Tuple[int, int]]:
+    def _segment(trace: str, **kwargs) -> tuple[list[Any], list[str]] | list[Any]:
         spans = RTRuleRegex.sentence_spans(trace)
 
         if not spans:
@@ -99,4 +99,4 @@ class RTRuleRegex(SegBase):
 
         # final segment goes to end of text
         segments.append((current_start, len(trace)))
-        return segments
+        return segments, ["UNK" for _ in segments]

@@ -173,10 +173,11 @@ class RTLLMEntropy(SegBase):
                     window: int = 30,
                  quantile: int = 10,
                  **kwargs):
-        return RTLLMEntropy._trace_pass(trace=trace,
+        offsets = RTLLMEntropy._trace_pass(trace=trace,
                                           system_prompt=system_prompt,
                                           model_name=model_name,
                                           max_kv_tokens=max_kv_tokens,
                                           window=window,
                                           quantile=quantile)
+        return offsets, ["UNK" for _ in offsets]
 

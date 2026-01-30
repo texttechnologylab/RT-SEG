@@ -98,7 +98,7 @@ class RTLLMOffsetBased(SegBase):
             margin: int = 200,
             max_retries_per_chunk: int = 10,
             **kwargs
-    ) -> List[Tuple[int, int]]:
+    ) -> tuple[list[tuple[int, int]], list[str]]:
 
         all_segments: List[Tuple[int, int]] = []
 
@@ -141,5 +141,5 @@ class RTLLMOffsetBased(SegBase):
         if i < len(trace):
             all_segments.append((i, len(trace)))
 
-        return all_segments
+        return all_segments, ["UNK" for _ in all_segments]
 

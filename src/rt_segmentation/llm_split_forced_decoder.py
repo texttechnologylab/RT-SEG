@@ -290,7 +290,7 @@ class RTLLMForcedDecoderBased(SegBase):
                                                                            quantile=quantile,
                                                                            sep_tok=sep_tok)
         # print(threshold, gap_mean, gap_std)
-        return RTLLMForcedDecoderBased._segment_pass(trace=trace,
+        offsets = RTLLMForcedDecoderBased._segment_pass(trace=trace,
                                                      system_prompt=system_prompt,
                                                      model_name=model_name,
                                                      threshold=threshold,
@@ -300,3 +300,5 @@ class RTLLMForcedDecoderBased(SegBase):
                                                      alpha=alpha,
                                                      beta=beta,
                                                      sep_tok=sep_tok)
+
+        return offsets, ["UNK" for _ in offsets]

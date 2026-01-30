@@ -1,3 +1,4 @@
+import time
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Any
 from surrealdb import Surreal, RecordID
@@ -10,7 +11,7 @@ class SegBase(ABC):
 
     @staticmethod
     @abstractmethod
-    def _segment(trace: str, **kwargs) -> List[Tuple[int, int]]:
+    def _segment(trace: str, **kwargs) -> Tuple[List[Tuple[int, int]], List[str]]:
         pass
 
     @staticmethod
@@ -39,15 +40,18 @@ class SegBase(ABC):
             for res in tqdm(results, desc=f"Segmenting traces :: {exp_id}"):
                 rt = res.get("rt")
                 try:
+                    s = time.time()
                     offsets = instance._segment(trace=rt, **kwargs)
+                    e = time.time()
                 except Exception as e:
                     print(e)
                     continue
 
                 split_id = RecordID(f"{exp_id}", res.get("id").id)
-                db.upsert(split_id, {"split": offsets})
+                db.upsert(split_id, {"split": offsets, "ptime": e - s})
                 db.insert_relation(f"has_{exp_id}", {"in": res.get("id"), "out": split_id})
 
     @staticmethod
     def return_segments():
+        # TODO
         pass

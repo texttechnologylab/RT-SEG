@@ -96,7 +96,7 @@ class RTLLMSentBased(SegBase):
                 "Qwen/Qwen2.5-7B-Instruct"],
             max_retry: int = 30,
             **kwargs
-    ) -> List[Tuple[int, int]]:
+    ) -> tuple[list[Any], list[str]]:
 
         all_segments: List[Tuple[int, int]] = []
 
@@ -179,4 +179,4 @@ class RTLLMSentBased(SegBase):
         for idx, offset in enumerate(final_offsets[:-1]):
             corrected_final_offsets.append((offset[0], final_offsets[idx + 1][0]))
         corrected_final_offsets.append(final_offsets[-1])
-        return corrected_final_offsets
+        return corrected_final_offsets, ["UNK" for _ in corrected_final_offsets]
