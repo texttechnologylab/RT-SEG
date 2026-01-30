@@ -90,7 +90,9 @@ import pytest
 @pytest.mark.parametrize("use_trace", ["trc1", "trc2"])
 def test_segmentation(use_trace):
     trace_data = load_example_trace(use_trace)
-    offsets, labels = RTBERTopicSegmentation._segment(trace=trace_data)
+    offsets, labels = RTBERTopicSegmentation._segment(trace=trace_data, system_prompt=load_prompt("system_prompt_topic_label"),
+                                                      model_name="Qwen/Qwen2.5-1.5B-Instruct",
+                                                      all_custom_labels=True)
 
     for ofs, label in zip(offsets, labels):
         print(50 * "=")
@@ -105,11 +107,6 @@ def test_segmentation(use_trace):
     assert isinstance(offsets[0][1], int)
     assert isinstance(labels[0], str)
 
-    if use_trace == "trc1":
-        assert labels[0] == "Example"
-    elif use_trace == "trc2":
-        # bertopic topics are by default labelled with topic number appended by top 10 representative word separated by underscore
-        assert labels[0][0].isdigit()
 
 
 if __name__ == "__main__":
