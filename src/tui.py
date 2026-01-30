@@ -66,7 +66,7 @@ def segments_to_rich_markup(
 
         segment_part = f"[black on {color}] {seg_text} [/]"
         tag_part = f" [bold {color}]<[/][{color}]{label}[/][bold {color}]>[/] "
-        result.append(f"{tag_part}{segment_part}")
+        result.append(f"\n{tag_part}\n{segment_part}")
         prev = end
 
     if prev < len(text):
