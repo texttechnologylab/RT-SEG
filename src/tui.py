@@ -166,7 +166,7 @@ class MyApp(App):
             offsets, seg_labels = RTLLMForcedDecoderBased._segment(
                 trace=text,
                 system_prompt=load_prompt("system_prompt_forceddecoder"),
-                model_name="Qwen/Qwen2.5-7B-Instruct")
+                model_name=model_name)
         elif selected_method == "offset":
             offsets, seg_labels = RTLLMOffsetBased._segment(
                 trace=text,
@@ -196,7 +196,8 @@ class MyApp(App):
         elif selected_method == "zero":
             offsets, seg_labels = RTZeroShotSeqClassification._segment(
                 trace=text,
-                model_name="facebook/bart-large-mnli")
+                model_name="facebook/bart-large-mnli",
+                labels=["verification", "pivot", "inference", "framing", "conclusion"])
         elif selected_method == "topic":
             offsets, seg_labels = RTBERTopicSegmentation._segment(
                 trace=text,

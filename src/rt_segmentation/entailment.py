@@ -70,16 +70,9 @@ class RTEntailmentBasedSegmentation(SegBase):
     @staticmethod
     def _segment(
             trace: str,
-            max_retry: int = 30,
             tolerance: float = 0.15,
             min_threshold: float = 0.25,
-            chunk_size: int = 100,
-            prompt: str = "",
-            system_prompt: str = "",
-            model_name: Literal[
-                "Qwen/Qwen2.5-7B-Instruct-1M",
-                "mistralai/Mixtral-8x7B-Instruct-v0.1",
-                "Qwen/Qwen2.5-7B-Instruct"] = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
+            model_name: Literal["MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7"] = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
             **kwargs
     ) -> tuple[list[Any], list[str]]:
 

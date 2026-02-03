@@ -136,15 +136,8 @@ class RTBERTopicSegmentation(SegBase):
                 "Qwen/Qwen2.5-7B-Instruct-1M",
                 "mistralai/Mixtral-8x7B-Instruct-v0.1",
                 "Qwen/Qwen2.5-7B-Instruct"],
-            embedding_model_name: Literal[
-                "Qwen/Qwen2.5-7B-Instruct-1M",
-                "mistralai/Mixtral-8x7B-Instruct-v0.1",
-                "Qwen/Qwen2.5-7B-Instruct"] = "all-MiniLM-L6-v2",
-
-            chunk_size: int = 100,
-            prompt: str = "",
+            embedding_model_name: Literal["all-MiniLM-L6-v2"] = "all-MiniLM-L6-v2",
             system_prompt: str = "",
-            max_retry: int = 30,
             all_custom_labels: bool = False,
             **kwargs
     ) -> Tuple[List[Tuple[int, int]], List[str]]:
@@ -153,7 +146,12 @@ class RTBERTopicSegmentation(SegBase):
         documents = [s for s in documents if s]
         if len(documents) < 100:
             logger.info(f"Too few sentences ({len(documents)}) for BERTopic, Trying ZeroShotSeqClassification instead.")
-            return RTZeroShotSeqClassification._segment(trace=trace, model_name="facebook/bart-large-mnli")
+            return RTZeroShotSeqClassification._segment(trace=trace,
+                                                        model_name="facebook/bart-large-mnli",
+                                                        labels = ["Context", "Planning", "Fact",
+                                                                  "Restatement", "Example", "Reflection",
+                                                                  "Conclusion"],
+            )
 
         topic_model = RTBERTopicSegmentation.load_topic_model(embedding_model_name)
 

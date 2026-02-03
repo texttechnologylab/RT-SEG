@@ -47,28 +47,16 @@ class RTEmbeddingBasedSemanticShift(SegBase):
     @staticmethod
     def _segment(
             trace: str,
-
-            embedding_model_name: Literal[
-                "Qwen/Qwen2.5-7B-Instruct-1M",
-                "mistralai/Mixtral-8x7B-Instruct-v0.1",
-                "Qwen/Qwen2.5-7B-Instruct"] = "all-MiniLM-L6-v2",
-            max_retry: int = 30,
+            model_name: Literal["all-MiniLM-L6-v2"] = "all-MiniLM-L6-v2",
             tolerance: float = 0.15,
             min_threshold: float = 0.4,
-            chunk_size: int = 100,
-            prompt: str = "",
-            system_prompt: str = "",
-            model_name: Literal[
-                "Qwen/Qwen2.5-7B-Instruct-1M",
-                "mistralai/Mixtral-8x7B-Instruct-v0.1",
-                "Qwen/Qwen2.5-7B-Instruct"] = "Qwen/Qwen2.5-7B-Instruct",
             **kwargs
     ) -> tuple[list[Any], list[str]]:
 
         offsets = list(RTEmbeddingBasedSemanticShift.load_tokenizer().span_tokenize(trace))
         # trace = nltk.sent_tokenize(trace)
         strace = [trace[tr[0]:tr[1]] for tr in offsets]
-        embeddings = RTEmbeddingBasedSemanticShift.load_embedding_model(embedding_model_name).encode(strace)
+        embeddings = RTEmbeddingBasedSemanticShift.load_embedding_model(model_name).encode(strace)
         # Current Segment State
         current_segment_sents = [strace[0]]
         current_segment_vecs = [embeddings[0]]

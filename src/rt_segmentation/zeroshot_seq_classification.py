@@ -57,10 +57,6 @@ class RTZeroShotSeqClassification(SegBase):
                 "Qwen/Qwen2.5-7B-Instruct-1M",
                 "mistralai/Mixtral-8x7B-Instruct-v0.1",
                 "Qwen/Qwen2.5-7B-Instruct"],
-            chunk_size: int = 100,
-            prompt: str = "",
-            system_prompt: str = "",
-            max_retry: int = 30,
             labels: List[str] = ["Context", "Planning", "Fact", "Restatement", "Example", "Reflection", "Conclusion"],
             **kwargs
     ) -> Tuple[List[Tuple[int, int]], List[str]]:
@@ -68,15 +64,23 @@ class RTZeroShotSeqClassification(SegBase):
         offsets = list(RTZeroShotSeqClassification.load_tokenizer().span_tokenize(trace))
 
         classifier = RTZeroShotSeqClassification.load_model(model_name)
-        final_offsets = []
-        final_labels = []
+        offset_labels = []
         for offset in offsets:
             trace_seq = trace[offset[0]:offset[1]]
 
             result = classifier(trace_seq, labels, multi_label=False)
-            final_offsets.append(offset)
-            final_labels.append(result["labels"][0])
+            offset_labels.append(result["labels"][0])
 
+        final_offsets = []
+        final_labels = []
+        current_offset = offsets[0][0]
+        for idx in range(1, len(offsets)):
+            if offset_labels[idx - 1] != offset_labels[idx]:
+                final_offsets.append((current_offset, offsets[idx - 1][1]))
+                final_labels.append(offset_labels[idx - 1])
+                current_offset = offsets[idx][0]
 
+        if final_offsets[-1][1] != offsets[-1][1]:
+            final_offsets.append((current_offset, offsets[-1][1]))
 
         return final_offsets, final_labels
