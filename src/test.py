@@ -15,7 +15,8 @@ from rt_segmentation import (RTLLMOffsetBased,
                              load_prompt,
                              load_example_trace, RTLLMSurprisal, RTLLMEntropy, RTLLMTopKShift, RTLLMFlatnessBreak,
                              export_gold_set,
-                             RTSeg, OffsetFusionGraph)
+                             RTSeg, OffsetFusionGraph, RTArgument)
+
 
 def test_RTLLMSentBased():
     res = RTLLMSentBased._segment(trace=load_example_trace("trc1"),
@@ -148,6 +149,22 @@ def test_FactorySegmentation():
     assert isinstance(offsets[0][0], int) and isinstance(offsets[0][1], int)
     assert isinstance(labels[0], str)
 
+
+def test_RTArgument():
+    offsets, labels = RTArgument._segment(trace=load_example_trace("trc1"),
+                                          model_name="Qwen/Qwen3-4B-Instruct-2507",
+                                          context_window=1,
+                                          system_prompt=load_prompt("system_prompt_adu"),
+                                          adu_prompt=load_prompt("completion_prompt_adu"))
+    for ofs, label in zip(offsets, labels):
+        print(50 * "=")
+        print(load_example_trace("trc1")[ofs[0]:ofs[1]])
+        print(label)
+    assert isinstance(offsets, list)
+    assert isinstance(labels, list)
+    assert isinstance(offsets[0], tuple) or isinstance(offsets[0], list)
+    assert isinstance(offsets[0][0], int) and isinstance(offsets[0][1], int)
+    assert isinstance(labels[0], str)
 
 if __name__ == "__main__":
     pytest.main([
