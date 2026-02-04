@@ -84,9 +84,9 @@ class RTArgument(SegBase):
         for i, tr in enumerate(strace):
             context = context_windows[i]
             if tr == context[0]:
-                prompts.append(adu_prompt.format(PREVIOUS_SEGMENT='', TARGET_SEGMENT=tr, NEXT_SEGMENT=context[-1]))
+                prompts.append(adu_prompt.format(PREVIOUS_SEGMENT='[START OF TRACE]', TARGET_SEGMENT=tr, NEXT_SEGMENT=context[-1]))
             elif tr == context[-1]:
-                prompts.append(adu_prompt.format(PREVIOUS_SEGMENT=context[0], TARGET_SEGMENT=tr, NEXT_SEGMENT=""))
+                prompts.append(adu_prompt.format(PREVIOUS_SEGMENT=context[0], TARGET_SEGMENT=tr, NEXT_SEGMENT='[END OF TRACE]'))
             else:
                 prompts.append(
                     adu_prompt.format(PREVIOUS_SEGMENT=context[0], TARGET_SEGMENT=tr, NEXT_SEGMENT=context[-1]))
@@ -120,7 +120,7 @@ class RTArgument(SegBase):
         labels = []
 
         for item in adu_labels:
-            match = re.match(r'\*\*\[(.*?)\]\*\*', item)
+            match = re.match(r'\[(.*?)\]', item)
             if match:
                 labels.append(match.group(1))
 
