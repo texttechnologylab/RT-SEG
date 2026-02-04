@@ -132,6 +132,7 @@ class RTBERTopicSegmentation(SegBase):
     @staticmethod
     def _segment(
             trace: str,
+            seg_base_unit: Literal["sent", "clause"],
             model_name: Literal[
                 "Qwen/Qwen2.5-7B-Instruct-1M",
                 "mistralai/Mixtral-8x7B-Instruct-v0.1",
@@ -141,12 +142,14 @@ class RTBERTopicSegmentation(SegBase):
             all_custom_labels: bool = False,
             **kwargs
     ) -> Tuple[List[Tuple[int, int]], List[str]]:
-        offsets = list(RTBERTopicSegmentation.load_tokenizer().span_tokenize(trace))
+        offsets = SegBase.get_base_offsets(trace, seg_base_unit=seg_base_unit)
+
         documents = [trace[o[0]:o[1]] for o in offsets]
         documents = [s for s in documents if s]
         if len(documents) < 100:
             logger.info(f"Too few sentences ({len(documents)}) for BERTopic, Trying ZeroShotSeqClassification instead.")
             return RTZeroShotSeqClassification._segment(trace=trace,
+                                                        seg_base_unit=seg_base_unit,
                                                         model_name="facebook/bart-large-mnli",
                                                         labels = ["Context", "Planning", "Fact",
                                                                   "Restatement", "Example", "Reflection",

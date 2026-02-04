@@ -3,7 +3,7 @@ import time
 
 from rt_segmentation import (RTLLMOffsetBased,
                              RTLLMForcedDecoderBased,
-                             RTLLMSentBased,
+                             RTLLMSegUnitBased,
                              RTBERTopicSegmentation,
                              RTEmbeddingBasedSemanticShift,
                              RTZeroShotSeqClassification,
@@ -18,13 +18,14 @@ from rt_segmentation import (RTLLMOffsetBased,
                              RTSeg, OffsetFusionGraph)
 
 def test_RTLLMSentBased():
-    res = RTLLMSentBased._segment(trace=load_example_trace("trc1"),
-                                  chunk_size=20,
-                                  prompt="",
-                                  system_prompt=load_prompt("system_prompt_sentbased"),
-                                  model_name="Qwen/Qwen2.5-7B-Instruct"
-                                  # model_name="mistralai/Mixtral-8x7B-Instruct-v0.1"
-                                  )
+    res = RTLLMSegUnitBased._segment(trace=load_example_trace("trc1"),
+                                     seg_base_unit="clause",
+                                      chunk_size=20,
+                                      prompt="",
+                                      system_prompt=load_prompt("system_prompt_sentbased"),
+                                      model_name="Qwen/Qwen2.5-7B-Instruct"
+                                      # model_name="mistralai/Mixtral-8x7B-Instruct-v0.1"
+                                      )
     assert isinstance(res, list)
     assert isinstance(res[0], tuple) or isinstance(res[0], list)
     assert isinstance(res[0][0], int) and isinstance(res[0][1], int)
@@ -74,7 +75,9 @@ def test_RTLLMFlatnessBreak():
     assert isinstance(res[0][0], int) and isinstance(res[0][1], int)
 
 def test_RTZeroShotSeqClassification():
-    offsets, labels = RTZeroShotSeqClassification._segment(trace=load_example_trace("trc1"), model_name="facebook/bart-large-mnli")
+    offsets, labels = RTZeroShotSeqClassification._segment(trace=load_example_trace("trc1"),
+                                                           seg_base_unit="clause",
+                                                           model_name="facebook/bart-large-mnli")
 
     for ofs, label in zip(offsets, labels):
         print(50 * "=")
@@ -92,6 +95,7 @@ def test_RTZeroShotSeqClassification():
 def test_RTBERTopicSegmentation(use_trace):
     trace_data = load_example_trace(use_trace)
     offsets, labels = RTBERTopicSegmentation._segment(trace=trace_data,
+                                                      seg_base_unit="clause",
                                                       system_prompt=load_prompt("system_prompt_topic_label"),
                                                       model_name="Qwen/Qwen2.5-1.5B-Instruct",
                                                       all_custom_labels=True)
@@ -111,6 +115,7 @@ def test_RTBERTopicSegmentation(use_trace):
 
 def test_RTEmbeddingBasedSemanticShift():
     offsets, labels = RTEmbeddingBasedSemanticShift._segment(trace=load_example_trace("trc1"),
+                                                             seg_base_unit="clause",
                                                              min_threshold=0.4,
                                                              tolerance=0.20
                                                              )
@@ -125,7 +130,8 @@ def test_RTEmbeddingBasedSemanticShift():
     assert isinstance(labels[0], str)
 
 def test_RTEntailmentBasedSegmentation():
-    offsets, labels = RTEntailmentBasedSegmentation._segment(trace=load_example_trace("trc1"))
+    offsets, labels = RTEntailmentBasedSegmentation._segment(trace=load_example_trace("trc1"),
+                                                             seg_base_unit="clause",)
     for ofs, label in zip(offsets, labels):
         print(50 * "=")
         print(load_example_trace("trc1")[ofs[0]:ofs[1]])
@@ -139,7 +145,7 @@ def test_RTEntailmentBasedSegmentation():
 def test_FactorySegmentation():
     rt_seg = RTSeg(engines=[RTRuleRegex, RTBERTopicSegmentation],
                    aligner=OffsetFusionGraph)
-    offsets, labels = rt_seg(trace=load_example_trace("trc1"))
+    offsets, labels = rt_seg(trace=load_example_trace("trc1"), seg_base_unit="clause")
     print(offsets)
     print(labels)
     assert isinstance(offsets, list)

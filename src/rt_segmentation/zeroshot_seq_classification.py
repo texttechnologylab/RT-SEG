@@ -20,6 +20,7 @@ from nltk.tokenize import PunktSentenceTokenizer
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer, DynamicCache, pipeline
 import numpy as np
+
 from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
 from .seg_base import SegBase
 
@@ -53,6 +54,7 @@ class RTZeroShotSeqClassification(SegBase):
     @staticmethod
     def _segment(
             trace: str,
+            seg_base_unit: Literal["sent", "clause"],
             model_name: Literal[
                 "Qwen/Qwen2.5-7B-Instruct-1M",
                 "mistralai/Mixtral-8x7B-Instruct-v0.1",
@@ -61,7 +63,7 @@ class RTZeroShotSeqClassification(SegBase):
             **kwargs
     ) -> Tuple[List[Tuple[int, int]], List[str]]:
 
-        offsets = list(RTZeroShotSeqClassification.load_tokenizer().span_tokenize(trace))
+        offsets = SegBase.get_base_offsets(trace, seg_base_unit=seg_base_unit)
 
         classifier = RTZeroShotSeqClassification.load_model(model_name)
         offset_labels = []
@@ -70,6 +72,10 @@ class RTZeroShotSeqClassification(SegBase):
 
             result = classifier(trace_seq, labels, multi_label=False)
             offset_labels.append(result["labels"][0])
+
+        assert len(offset_labels) == len(offsets), "Something went wrong with the model inference."
+        if offset_labels == [] and offsets == []:
+            return [], []
 
         final_offsets = []
         final_labels = []
@@ -80,7 +86,13 @@ class RTZeroShotSeqClassification(SegBase):
                 final_labels.append(offset_labels[idx - 1])
                 current_offset = offsets[idx][0]
 
-        if final_offsets[-1][1] != offsets[-1][1]:
+        if final_offsets:
+            if final_offsets[-1][1] != offsets[-1][1]:
+                final_offsets.append((current_offset, offsets[-1][1]))
+                final_labels.append(offset_labels[-1])
+        else:
             final_offsets.append((current_offset, offsets[-1][1]))
+            final_labels.append(offset_labels[-1])
+
 
         return final_offsets, final_labels

@@ -1,13 +1,28 @@
 import time
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Any
+from functools import lru_cache
+from typing import List, Tuple, Any, Literal
+
+from nltk import PunktSentenceTokenizer
 from surrealdb import Surreal, RecordID
 from tqdm import tqdm
 
+from .base_segmentor import UnitSegmentor
 from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
 
 
 class SegBase(ABC):
+    @staticmethod
+    def get_base_offsets(trace: str,
+                         seg_base_unit: Literal["sent", "clause"]):
+        if seg_base_unit == "clause":
+            offsets = UnitSegmentor.get_math_aware_clauses(trace)
+        elif seg_base_unit == "sent":
+            offsets = UnitSegmentor.get_math_aware_sents(trace)
+        else:
+            raise ValueError(f"Invalid seg_base_unit: {seg_base_unit}")
+        return offsets
+
 
     @staticmethod
     @abstractmethod

@@ -20,11 +20,12 @@ from nltk.tokenize import PunktSentenceTokenizer
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer, DynamicCache
 import numpy as np
+
 from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
 from .seg_base import SegBase
 
 
-class RTLLMSentBased(SegBase):
+class RTLLMSegUnitBased(SegBase):
     @staticmethod
     @lru_cache(maxsize=1)
     def load_tokenizer():
@@ -61,7 +62,7 @@ class RTLLMSentBased(SegBase):
                      "mistralai/Mixtral-8x7B-Instruct-v0.1",
                      "Qwen/Qwen2.5-7B-Instruct"]
                  ):
-        model, tokenizer = RTLLMSentBased.load_model(model_name)
+        model, tokenizer = RTLLMSegUnitBased.load_model(model_name)
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"{prompt}{trace}"}
@@ -87,6 +88,7 @@ class RTLLMSentBased(SegBase):
     @staticmethod
     def _segment(
             trace: str,
+            seg_base_unit: Literal["sent", "clause"],
             chunk_size: int,
             prompt: str,
             system_prompt: str,
@@ -100,7 +102,8 @@ class RTLLMSentBased(SegBase):
 
         all_segments: List[Tuple[int, int]] = []
 
-        offsets = list(RTLLMSentBased.load_tokenizer().span_tokenize(trace))
+        offsets = SegBase.get_base_offsets(trace, seg_base_unit=seg_base_unit)
+
         # trace = nltk.sent_tokenize(trace)
         strace = [trace[tr[0]:tr[1]] for tr in offsets]
         retry = 0
@@ -109,7 +112,7 @@ class RTLLMSentBased(SegBase):
             # Build chunk with carryover (carryover is CONTEXT, not to be re-segmented)
             base_chunk = strace[i:i + chunk_size]
             base_chunk_input = json.dumps({idx: sent for idx, sent in enumerate(base_chunk)})
-            response = RTLLMSentBased._trace_pass(
+            response = RTLLMSegUnitBased._trace_pass(
                 base_chunk_input, "", system_prompt, model_name
             )
             # --- robust JSON parsing ---

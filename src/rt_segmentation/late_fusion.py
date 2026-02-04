@@ -120,7 +120,12 @@ class OffsetFusionGraph(OffsetFusion):
             path.append(end)
             end = longest[end][1]
         path = list(reversed(path))
-        return [(path[i], path[i + 1]) for i in range(len(path) - 1)]
+        paths = [(path[i], path[i + 1]) for i in range(len(path) - 1)]
+        if paths[0][0] != 0:
+            paths = [(0, paths[0][0])] + paths
+        if paths[-1][1] != max(all_boundaries):
+            paths.append((paths[-1][1], max(all_boundaries)))
+        return paths
 
 
 class LabelFusion:

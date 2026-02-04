@@ -21,6 +21,7 @@ from nltk.tokenize import PunktSentenceTokenizer
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer, DynamicCache
 import numpy as np
+
 from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
 from .seg_base import SegBase
 
@@ -47,13 +48,16 @@ class RTEmbeddingBasedSemanticShift(SegBase):
     @staticmethod
     def _segment(
             trace: str,
+            seg_base_unit: Literal["sent", "clause"],
             model_name: Literal["all-MiniLM-L6-v2"] = "all-MiniLM-L6-v2",
             tolerance: float = 0.15,
             min_threshold: float = 0.4,
             **kwargs
     ) -> tuple[list[Any], list[str]]:
 
-        offsets = list(RTEmbeddingBasedSemanticShift.load_tokenizer().span_tokenize(trace))
+
+        offsets = SegBase.get_base_offsets(trace, seg_base_unit=seg_base_unit)
+
         # trace = nltk.sent_tokenize(trace)
         strace = [trace[tr[0]:tr[1]] for tr in offsets]
         embeddings = RTEmbeddingBasedSemanticShift.load_embedding_model(model_name).encode(strace)

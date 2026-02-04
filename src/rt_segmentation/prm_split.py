@@ -22,7 +22,6 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, DynamicCache, Auto
     AutoModel
 import numpy as np
 
-
 from .seg_base import SegBase
 from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
 
@@ -104,6 +103,7 @@ class RTPRMBase(SegBase):
 
     @staticmethod
     def _segment(trace: str,
+                 seg_base_unit: Literal["sent", "clause"],
                  problem: str,
                  chunk_size: int = 50,
                  window: int = 4,
@@ -111,7 +111,8 @@ class RTPRMBase(SegBase):
                  **kwargs):
         all_segments: List[Tuple[int, int]] = []
 
-        offsets = list(RTPRMBase.load_tokenizer().span_tokenize(trace))
+        offsets = SegBase.get_base_offsets(trace, seg_base_unit=seg_base_unit)
+
         strace = [trace[tr[0]:tr[1]] for tr in offsets]
 
         scores = []

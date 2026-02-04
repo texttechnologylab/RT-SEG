@@ -10,7 +10,7 @@ from textual.widgets import Header, Footer, Static, Button, TextArea, Label, Sel
 
 from rt_segmentation import (RTLLMOffsetBased,
                              RTLLMForcedDecoderBased,
-                             RTLLMSentBased,
+                             RTLLMSegUnitBased,
                              RTRuleRegex,
                              RTNewLine,
                              RTBERTopicSegmentation,
@@ -199,7 +199,7 @@ class MyApp(App):
                        "flatness": RTLLMFlatnessBreak,
                        "forced": RTLLMForcedDecoderBased,
                        "offset": RTLLMOffsetBased,
-                       "sent": RTLLMSentBased,
+                       "unit": RTLLMSegUnitBased,
                        "surprisal": RTLLMSurprisal,
                        "topk": RTLLMTopKShift,
                        "zero": RTZeroShotSeqClassification,
@@ -221,7 +221,7 @@ class MyApp(App):
                         "intersect": OffsetFusionIntersect,
                         "none": None,}
         factory = RTSeg(engines=engines, aligner=aligner_dict[selected_aligner], label_fusion_type="concat")
-        offsets, seg_labels = factory(text)
+        offsets, seg_labels = factory(text, seg_base_unit="clause")
 
         if set(seg_labels) == {"UNK"}:
             seg_labels = [f"{sl}:{idx}" for idx, sl in enumerate(seg_labels)]

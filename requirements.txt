@@ -12,4 +12,5 @@ pytest
 textual
 bertopic
 sentence-transformers
+spacy
 # pip install --extra-index-url=https://pypi.nvidia.com cuml-cu12==24.12.*

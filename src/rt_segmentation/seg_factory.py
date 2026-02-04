@@ -7,7 +7,7 @@ from .seg_base import SegBase
 from .rule_split_regex import RTRuleRegex
 from .rule_split_newline import RTNewLine
 from .llm_split_offset import RTLLMOffsetBased
-from .llm_split_sent_chunks import RTLLMSentBased
+from .llm_split_sent_chunks import RTLLMSegUnitBased
 from .llm_split_forced_decoder import RTLLMForcedDecoderBased
 from .llm_split_surprisal import RTLLMSurprisal
 from .llm_split_entropy import RTLLMEntropy
@@ -76,7 +76,7 @@ class RTSeg:
                         "system_prompt": None},
             RTLLMOffsetBased: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
                                "system_prompt": load_prompt("system_prompt_offset")},
-            RTLLMSentBased: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
+            RTLLMSegUnitBased: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
                              "system_prompt": load_prompt("system_prompt_sentbased")},
             RTLLMForcedDecoderBased: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
                                       "system_prompt": load_prompt("system_prompt_forceddecoder")},

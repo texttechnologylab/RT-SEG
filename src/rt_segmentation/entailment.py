@@ -21,6 +21,7 @@ from nltk.tokenize import PunktSentenceTokenizer
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer, DynamicCache, AutoModelForSequenceClassification
 import numpy as np
+
 from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
 from .seg_base import SegBase
 
@@ -70,13 +71,15 @@ class RTEntailmentBasedSegmentation(SegBase):
     @staticmethod
     def _segment(
             trace: str,
+            seg_base_unit: Literal["sent", "clause"],
             tolerance: float = 0.15,
             min_threshold: float = 0.25,
             model_name: Literal["MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7"] = "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
             **kwargs
     ) -> tuple[list[Any], list[str]]:
 
-        offsets = list(RTEntailmentBasedSegmentation.load_tokenizer().span_tokenize(trace))
+        offsets = SegBase.get_base_offsets(trace, seg_base_unit=seg_base_unit)
+
         # trace = nltk.sent_tokenize(trace)
         strace = [trace[tr[0]:tr[1]] for tr in offsets]
         model, tokenizer = RTEntailmentBasedSegmentation.load_model(model_name)

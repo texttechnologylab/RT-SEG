@@ -80,8 +80,11 @@ class RTRuleRegex(SegBase):
     # Segment offsets
     # -----------------------------
     @staticmethod
-    def _segment(trace: str, **kwargs) -> tuple[list[Any], list[str]] | list[Any]:
-        spans = RTRuleRegex.sentence_spans(trace)
+    def _segment(trace: str,
+                 seg_base_unit: Literal["sent", "clause"],
+                 **kwargs) -> tuple[list[Any], list[str]] | list[Any]:
+
+        spans = SegBase.get_base_offsets(trace, seg_base_unit=seg_base_unit)
 
         if not spans:
             return []
