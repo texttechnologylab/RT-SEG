@@ -125,4 +125,4 @@ class RTEntailmentBasedSegmentation(SegBase):
         if current_segment:
             final_offsets.append(curr_offset)
 
-        return final_offsets, ["UNLABELLED" for _ in final_offsets]
+        return final_offsets, ["UNK" for _ in final_offsets]
