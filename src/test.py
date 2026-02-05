@@ -21,7 +21,7 @@ from rt_segmentation import (RTLLMOffsetBased,
 
 
 def test_RTLLMSentBased():
-    res = RTLLMSegUnitBased._segment(trace=load_example_trace("trc1"),
+    offsets, labels = RTLLMSegUnitBased._segment(trace=load_example_trace("trc1"),
                                      seg_base_unit="clause",
                                       chunk_size=20,
                                       prompt="",
@@ -29,53 +29,53 @@ def test_RTLLMSentBased():
                                       model_name="Qwen/Qwen2.5-7B-Instruct"
                                       # model_name="mistralai/Mixtral-8x7B-Instruct-v0.1"
                                       )
-    assert isinstance(res, list)
-    assert isinstance(res[0], tuple) or isinstance(res[0], list)
-    assert isinstance(res[0][0], int) and isinstance(res[0][1], int)
+    assert isinstance(offsets, list)
+    assert isinstance(offsets[0], tuple) or isinstance(offsets[0], list)
+    assert isinstance(offsets[0][0], int) and isinstance(offsets[0][1], int)
 
 
 def test_RTLLMForcedDecoderBased():
-    res = RTLLMForcedDecoderBased._segment(trace=load_example_trace("trc1"),
+    offsets, labels = RTLLMForcedDecoderBased._segment(trace=load_example_trace("trc1"),
                                                system_prompt=load_prompt("system_prompt_forceddecoder"),
                                                model_name="Qwen/Qwen2.5-7B-Instruct")
-    assert isinstance(res, list)
-    assert isinstance(res[0], tuple) or isinstance(res[0], list)
-    assert isinstance(res[0][0], int) and isinstance(res[0][1], int)
+    assert isinstance(offsets, list)
+    assert isinstance(offsets[0], tuple) or isinstance(offsets[0], list)
+    assert isinstance(offsets[0][0], int) and isinstance(offsets[0][1], int)
 
 
 def test_RTLLMSurprisal():
-    res = RTLLMSurprisal._segment(trace=load_example_trace("trc1"),
+    offsets, labels = RTLLMSurprisal._segment(trace=load_example_trace("trc1"),
                                                system_prompt=load_prompt("system_prompt_surprisal"),
                                                model_name="Qwen/Qwen2.5-7B-Instruct")
-    assert isinstance(res, list)
-    assert isinstance(res[0], tuple) or isinstance(res[0], list)
-    assert isinstance(res[0][0], int) and isinstance(res[0][1], int)
+    assert isinstance(offsets, list)
+    assert isinstance(offsets[0], tuple) or isinstance(offsets[0], list)
+    assert isinstance(offsets[0][0], int) and isinstance(offsets[0][1], int)
 
 def test_RTLLMEntropy():
-    res = RTLLMEntropy._segment(trace=load_example_trace("trc1"),
+    offsets, labels = RTLLMEntropy._segment(trace=load_example_trace("trc1"),
                                                system_prompt=load_prompt("system_prompt_surprisal"),
                                                model_name="Qwen/Qwen2.5-7B-Instruct")
-    assert isinstance(res, list)
-    assert isinstance(res[0], tuple) or isinstance(res[0], list)
-    assert isinstance(res[0][0], int) and isinstance(res[0][1], int)
+    assert isinstance(offsets, list)
+    assert isinstance(offsets[0], tuple) or isinstance(offsets[0], list)
+    assert isinstance(offsets[0][0], int) and isinstance(offsets[0][1], int)
 
 
 def test_RTLLMTopKShift():
-    res = RTLLMTopKShift._segment(trace=load_example_trace("trc1"),
+    offsets, labels = RTLLMTopKShift._segment(trace=load_example_trace("trc1"),
                                                system_prompt=load_prompt("system_prompt_surprisal"),
                                                model_name="Qwen/Qwen2.5-7B-Instruct")
-    assert isinstance(res, list)
-    assert isinstance(res[0], tuple) or isinstance(res[0], list)
-    assert isinstance(res[0][0], int) and isinstance(res[0][1], int)
+    assert isinstance(offsets, list)
+    assert isinstance(offsets[0], tuple) or isinstance(offsets[0], list)
+    assert isinstance(offsets[0][0], int) and isinstance(offsets[0][1], int)
 
 
 def test_RTLLMFlatnessBreak():
-    res = RTLLMFlatnessBreak._segment(trace=load_example_trace("trc1"),
+    offsets, labels = RTLLMFlatnessBreak._segment(trace=load_example_trace("trc1"),
                                                system_prompt=load_prompt("system_prompt_surprisal"),
                                                model_name="Qwen/Qwen2.5-7B-Instruct")
-    assert isinstance(res, list)
-    assert isinstance(res[0], tuple) or isinstance(res[0], list)
-    assert isinstance(res[0][0], int) and isinstance(res[0][1], int)
+    assert isinstance(offsets, list)
+    assert isinstance(offsets[0], tuple) or isinstance(offsets[0], list)
+    assert isinstance(offsets[0][0], int) and isinstance(offsets[0][1], int)
 
 def test_RTZeroShotSeqClassification():
     offsets, labels = RTZeroShotSeqClassification._segment(trace=load_example_trace("trc1"),
