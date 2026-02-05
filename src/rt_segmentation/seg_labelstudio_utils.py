@@ -1,4 +1,5 @@
 import json
+import os
 import random
 from functools import lru_cache
 from typing import List, Dict, Tuple, Literal, Any
@@ -111,6 +112,61 @@ def export_gold_set():
 
     with open(f"{bp()}/data/label_studio/ls_data.json", "w") as f:
         json.dump(ds, f, indent=4)
+
+
+def export_rt_rf(trace: str,
+                 seg_base_unit: Literal["sent", "clause"] = "clause",):
+    offsets = SegBase.get_base_offsets(trace, seg_base_unit=seg_base_unit)
+    html_parts = []
+
+    box_style = (
+        "border: 1px solid #d1d5db; "
+        "border-radius: 8px; "
+        "padding: 16px; "
+        "background: #ffffff; "
+        "box-shadow: 0 2px 4px rgba(0,0,0,0.08); "
+        "font-family: system-ui, sans-serif; "
+        "line-height: 1.6;"
+    )
+    sentences = [trace[off[0]:off[-1]] for off in offsets]
+
+    for i, sentence in enumerate(sentences, start=1):
+        # Escape double quotes in sentence if any (safe for JSON + HTML)
+        safe_sentence = sentence.replace('"', '\\"')
+
+        box = (
+            f'<div style="margin-bottom: 20px;">'
+            f'<div style="{box_style}">'
+            f'{safe_sentence}'
+            f'</div></div>'
+        )
+        html_parts.append(box)
+
+    full_html = "".join(html_parts)
+
+    return full_html, offsets
+
+
+def export_rf_data_gold_set():
+    ds = []
+    files = os.listdir(f"{bp()}/data/label_studio/rf_data")
+    for file in files:
+        with open(f"{bp()}/data/label_studio/rf_data/{file}", "r") as f:
+            data = json.load(f)
+
+        full_html, offsets = export_rt_rf(data["raw_text"]["response"])
+        ds.append({
+            "id": data["doc_id"],
+            "data": {"html": full_html,
+                     "offsets": offsets,
+                     "origin_id": data["doc_id"]}
+        })
+
+    print(len(ds))
+
+    with open(f"{bp()}/data/label_studio/ls_data_rf.json", "w") as f:
+        json.dump(ds, f, indent=4)
+
 
 
 if __name__ == "__main__":
