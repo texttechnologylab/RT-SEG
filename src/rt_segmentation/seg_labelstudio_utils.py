@@ -18,13 +18,16 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, DynamicCache
 import numpy as np
 
 from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
+from .seg_base import SegBase
 
 
 
-
-def export_rt(trace: str, trace_id: Any, model: str, ds_origin: str):
-    offsets = PunktSentenceTokenizer().span_tokenize(trace)
-    offsets = [*offsets]
+def export_rt(trace: str,
+              trace_id: Any,
+              model: str,
+              ds_origin: str,
+              seg_base_unit: Literal["sent", "clause"] = "clause",):
+    offsets = SegBase.get_base_offsets(trace, seg_base_unit=seg_base_unit)
     html_parts = []
 
     box_style = (
@@ -66,7 +69,11 @@ def export_gold_set():
     login_data = sdb_login()
     missing = []
     ds = []
-    tasks = ["gpqa", "aime25", "hle"]
+    tasks = [
+        "gpqa",
+        "aime25",
+        # "hle"
+             ]
     models = ["gpt-oss:120b", "deepseek-r1:70b",
              "deepseek-r1:32b", "magistral:24b",
              "gpt-oss:20b", "qwen3:1.7b",
@@ -77,27 +84,18 @@ def export_gold_set():
             with Surreal(login_data["url"]) as db:
                 db.signin({"username": login_data["user"], "password": login_data["pwd"]})
                 db.use(login_data["ns"], login_data["db"])
-                res = db.query(f'SELECT rt, id, ds_origin, model from rtrace where string::len(rt) < 20000 and model="{model}" and ds_origin="{task}" and correct=true')
-                if res:
-                    target = random.choice(res)
-                    ds.append(export_rt(target.get("rt"), target.get("id").id, model, task))
-                else:
-                    missing.append((model, task))
-
-    for item in missing:
-        with Surreal(login_data["url"]) as db:
-            db.signin({"username": login_data["user"], "password": login_data["pwd"]})
-            db.use(login_data["ns"], login_data["db"])
-            while True:
-                res = db.query(
-                    f'SELECT rt, id, ds_origin, model from rtrace where string::len(rt) < 20000 and model="gpt-oss:120b" and ds_origin="{item[-1]}" and correct=true')
-
-                target = random.choice(res)
-                if target.get("id").id not in [tra.get("id") for tra in ds]:
-                    ds.append(export_rt(target.get("rt"), target.get("id").id, item[0], item[-1]))
-                    break
-                else:
-                    continue
+                max_len = 20000
+                tries = 0
+                while tries < 5:
+                    res = db.query(f'SELECT rt, id, ds_origin, model from rtrace where string::len(rt) < {max_len} and model="{model}" and ds_origin="{task}" and correct=true')
+                    if res:
+                        target = random.choice(res)
+                        ds.append(export_rt(target.get("rt"), target.get("id").id, model, task))
+                        break
+                    else:
+                        print(f"Missing data :: {model} {task}")
+                    tries += 1
+                    max_len += 10000
 
     for model in tqdm([f"human_stage{idx}" for idx in range(1, 5)], desc="Exporting human set"):
         with Surreal(login_data["url"]) as db:
@@ -105,11 +103,11 @@ def export_gold_set():
             db.use(login_data["ns"], login_data["db"])
             res = db.query(
                 f'SELECT rt, id, ds_origin, model from rtrace where string::len(rt) < 20000 and model="{model}" and ds_origin="nemo"')
-            targets = random.sample(res, min(3, len(res)))
-            for target in targets:
-                ds.append(export_rt(target.get("rt"), target.get("id").id, model, "nemo"))
+            target = random.choice(res)
+            ds.append(export_rt(target.get("rt"), target.get("id").id, model, "nemo"))
 
     print(len(ds), len(missing))
+
     with open(f"{bp()}/data/label_studio/ls_data.json", "w") as f:
         json.dump(ds, f, indent=4)
 
