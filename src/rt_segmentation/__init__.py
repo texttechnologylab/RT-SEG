@@ -16,6 +16,7 @@ from .prm_split import RTPRMBase
 from .semantic_shift import RTEmbeddingBasedSemanticShift
 from .entailment import RTEntailmentBasedSegmentation
 from .seg_factory import RTSeg
+from .llm_argument_split import RTLLMArgument
 from .late_fusion import (OffsetFusionFuzzy,
                           OffsetFusionGraph,
                           OffsetFusionMerge,
