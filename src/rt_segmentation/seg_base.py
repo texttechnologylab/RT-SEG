@@ -29,12 +29,14 @@ class SegBase(ABC):
     def _segment(trace: str, **kwargs) -> Tuple[List[Tuple[int, int]], List[str]]:
         pass
 
+    """
     @staticmethod
-    def sdb_segment(instance: "SegBase",
+    def sdb_segment_native_ds(instance: "SegBase",
                 exp_id: str,
                 clear: bool = True,
                 **kwargs):
         login_data = sdb_login()
+        login_data["db"] = "RT"
         with Surreal(login_data["url"]) as db:
             db.signin({"username": login_data["user"], "password": login_data["pwd"]})
             db.use(login_data["ns"], login_data["db"])
@@ -65,8 +67,6 @@ class SegBase(ABC):
                 split_id = RecordID(f"{exp_id}", res.get("id").id)
                 db.upsert(split_id, {"split": offsets, "ptime": e - s})
                 db.insert_relation(f"has_{exp_id}", {"in": res.get("id"), "out": split_id})
+    """
 
-    @staticmethod
-    def return_segments():
-        # TODO
-        pass
+

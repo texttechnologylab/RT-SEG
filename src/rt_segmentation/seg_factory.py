@@ -1,4 +1,8 @@
+import time
 from typing import Tuple, List, Literal, Optional, Union
+
+from surrealdb import Surreal, RecordID
+from tqdm import tqdm
 
 from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
 
@@ -100,7 +104,45 @@ class RTSeg:
             RTEntailmentBasedSegmentation: {"model_name": "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
                                             "system_prompt": ""}
         }
-        
+
+    def sdb_segment_ds(self,
+                       exp_id: str,
+                       clear: bool = True,
+                       db: str = "RT_RF",
+                       **kwargs):
+        login_data = sdb_login()
+        login_data["db"] = db
+        with Surreal(login_data["url"]) as db:
+            db.signin({"username": login_data["user"], "password": login_data["pwd"]})
+            db.use(login_data["ns"], login_data["db"])
+            if clear:
+                db.query(f"REMOVE TABLE {exp_id};")
+                db.query(f"DEFINE TABLE {exp_id} SCHEMALESS;")
+                db.query(f"DEFINE INDEX idx_id ON {exp_id} FIELDS id;")
+
+                db.query(f"REMOVE TABLE has_{exp_id};")
+                db.query(f"DEFINE TABLE has_{exp_id} SCHEMALESS TYPE RELATION IN rtrace OUT {exp_id};")
+                db.query(f"DEFINE INDEX idx_rt_id ON has_{exp_id} FIELDS id;")
+                db.query(f"DEFINE INDEX idx_rt_in ON has_{exp_id} FIELDS in;")
+                db.query(f"DEFINE INDEX idx_rt_out ON has_{exp_id} FIELDS out;")
+
+            results = db.query(
+                f"SELECT *, ->has_{exp_id}->{exp_id}.* as seg from rtrace where ->has_{exp_id}->{exp_id} == []")
+
+            for res in tqdm(results, desc=f"Segmenting traces :: {exp_id}"):
+                rt = res.get("rt")
+                try:
+                    s = time.time()
+                    offsets, labels = self.__call__(trace=rt, **kwargs)
+                    e = time.time()
+                except Exception as e:
+                    print(e)
+                    continue
+
+                split_id = RecordID(f"{exp_id}", res.get("id").id)
+                db.upsert(split_id, {"split": offsets, "labels": labels, "ptime": e - s})
+                db.insert_relation(f"has_{exp_id}", {"in": res.get("id"), "out": split_id})
+
     def __call__(self, trace: str, **kwargs) -> Tuple[List[Tuple[int, int]], List[str]]:
         engine_offsets = []
         engine_labels = []
