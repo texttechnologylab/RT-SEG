@@ -24,7 +24,7 @@ from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
 from .seg_base import SegBase
 
 
-class RTArgument(SegBase):
+class RTLLMArgument(SegBase):
     @staticmethod
     @lru_cache(maxsize=1)
     def load_tokenizer():
@@ -56,18 +56,21 @@ class RTArgument(SegBase):
     @staticmethod
     def _segment(
             trace: str,
+            seg_base_unit: Literal["sent", "clause"],
+            system_prompt: str,
+            user_prompt: str,
             model_name: Literal[
                 "Qwen/Qwen2.5-7B-Instruct-1M",
                 "mistralai/Mixtral-8x7B-Instruct-v0.1",
                 "Qwen/Qwen2.5-7B-Instruct"],
             context_window: int = 2,
-            system_prompt: str = '',
-            adu_prompt: str = '',
+            max_retry: int = 30,
             **kwargs
     ) -> Tuple[List[Tuple[int, int]], List[str]]:
 
-        offsets = list(RTArgument.load_tokenizer().span_tokenize(trace))
-        strace = [trace[o[0]:o[1]] for o in offsets]
+        offsets = SegBase.get_base_offsets(trace, seg_base_unit=seg_base_unit)
+
+        strace = [trace[tr[0]:tr[1]] for tr in offsets]
         context_windows = []
         total_sentences = len(strace)
 
@@ -84,15 +87,18 @@ class RTArgument(SegBase):
         for i, tr in enumerate(strace):
             context = context_windows[i]
             if tr == context[0]:
-                prompts.append(adu_prompt.format(PREVIOUS_SEGMENT='[START OF TRACE]', TARGET_SEGMENT=tr, NEXT_SEGMENT=context[-1]))
+                prompts.append(
+                    user_prompt.format(PREVIOUS_SEGMENT='[START OF TRACE]', TARGET_SEGMENT=tr,
+                                       NEXT_SEGMENT=context[-1]))
             elif tr == context[-1]:
-                prompts.append(adu_prompt.format(PREVIOUS_SEGMENT=context[0], TARGET_SEGMENT=tr, NEXT_SEGMENT='[END OF TRACE]'))
+                prompts.append(
+                    user_prompt.format(PREVIOUS_SEGMENT=context[0], TARGET_SEGMENT=tr, NEXT_SEGMENT='[END OF TRACE]'))
             else:
                 prompts.append(
-                    adu_prompt.format(PREVIOUS_SEGMENT=context[0], TARGET_SEGMENT=tr, NEXT_SEGMENT=context[-1]))
+                    user_prompt.format(PREVIOUS_SEGMENT=context[0], TARGET_SEGMENT=tr, NEXT_SEGMENT=context[-1]))
 
-        adu_labels = []
-        model, tokenizer = RTArgument.load_model(model_name)
+        labels = []
+        model, tokenizer = RTLLMArgument.load_model(model_name)
 
         for prompt in tqdm(prompts, desc="Labelling segments"):
             messages = [
@@ -106,31 +112,46 @@ class RTArgument(SegBase):
             )
             model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
 
-            generated_ids = model.generate(
-                **model_inputs,
-                max_new_tokens=128
-            )
-            generated_ids = [
-                output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
-            ]
+            keep_trying = True
+            retry = 0
+            while keep_trying:
+                try:
+                    generated_ids = model.generate(
+                        **model_inputs,
+                        max_new_tokens=128
+                    )
+                    generated_ids = [
+                        output_ids[len(input_ids):] for input_ids, output_ids in
+                        zip(model_inputs.input_ids, generated_ids)
+                    ]
 
-            response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-            adu_labels.append(response)
-
-        labels = []
-
-        for item in adu_labels:
-            match = re.match(r'\[(.*?)\]', item)
-            if match:
-                labels.append(match.group(1))
-
+                    response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+                    label = json.loads(response)["label"]
+                    if label:
+                        labels.append(label)
+                        keep_trying = False
+                    else:
+                        if retry < max_retry:
+                            retry += 1
+                        else:
+                            raise ValueError("Max retry reached")
+                except Exception as e:
+                    print(50 * "=")
+                    print(e)
+                    print(response)
+                    print(50 * "=")
+                    if retry < max_retry:
+                        retry += 1
+                    else:
+                        raise e
+                    continue
 
         current_start = 0
         current_end = 0
         final_offsets = []
         final_labels = []
         current_label = labels[0]
-        for i in range(len(labels)-1):
+        for i in range(len(labels) - 1):
             offset = offsets[i]
 
             if labels[i] == labels[i + 1]:
@@ -141,5 +162,4 @@ class RTArgument(SegBase):
                 current_start = offsets[i + 1][0]
                 current_end = offsets[i + 1][1]
                 current_label = labels[i + 1]
-
         return final_offsets, final_labels
