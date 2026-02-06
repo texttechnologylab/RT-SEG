@@ -18,7 +18,7 @@ from .llm_split_entropy import RTLLMEntropy
 from .llm_split_topk import RTLLMTopKShift
 from .llm_split_flatness_break import RTLLMFlatnessBreak
 from .bertopic_segmentation import RTBERTopicSegmentation
-from .zeroshot_seq_classification import RTZeroShotSeqClassification
+from .zeroshot_seq_classification import RTZeroShotSeqClassification, RTZeroShotSeqClassificationRF, RTZeroShotSeqClassificationTA
 from .prm_split import RTPRMBase
 from .llm_thought_anchor_scheme import RTLLMThoughtAnchor
 from .llm_reasoning_flow_scheme import RTLLMReasoningFlow
@@ -71,7 +71,9 @@ class RTSeg:
                        utilized by the class. It plays a central 
                        role in all operations of the class.
         """
-        if isinstance(engines, SegBase):
+        if isinstance(engines, list):
+            pass
+        else:
             engines = [engines]
 
         if aligner is None and len(engines) > 1:
@@ -86,9 +88,13 @@ class RTSeg:
             RTNewLine: {"model_name": None,
                         "system_prompt": None},
             RTLLMOffsetBased: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
-                               "system_prompt": load_prompt("system_prompt_offset")},
+                               "system_prompt": load_prompt("system_prompt_offset"),
+                               "prompt": "",
+                               "chunk_size": 300,},
             RTLLMSegUnitBased: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
-                             "system_prompt": load_prompt("system_prompt_sentbased")},
+                                "system_prompt": load_prompt("system_prompt_sentbased"),
+                                "prompt": "",
+                                "chunk_size": 100},
             RTLLMForcedDecoderBased: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
                                       "system_prompt": load_prompt("system_prompt_forceddecoder")},
             RTLLMSurprisal: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
@@ -104,6 +110,10 @@ class RTSeg:
             RTZeroShotSeqClassification: {"model_name": "facebook/bart-large-mnli",
                                           "system_prompt": "",
                                           "labels": ["verification", "pivot", "inference", "framing", "conclusion"]},
+            RTZeroShotSeqClassificationRF: {"model_name": "facebook/bart-large-mnli",
+                                          "system_prompt": ""},
+            RTZeroShotSeqClassificationTA: {"model_name": "facebook/bart-large-mnli",
+                                          "system_prompt": ""},
             RTPRMBase: {"model_name": "Qwen/Qwen2.5-Math-7B-PRM800K",
                         "system_prompt": ""},
             RTEmbeddingBasedSemanticShift: {"model_name": "all-MiniLM-L6-v2",
@@ -143,13 +153,13 @@ class RTSeg:
                 db.query(f"DEFINE INDEX idx_rt_out ON has_{exp_id} FIELDS out;")
 
             results = db.query(
-                f"SELECT *, ->has_{exp_id}->{exp_id}.* as seg from rtrace where ->has_{exp_id}->{exp_id} == []")
+                f"SELECT *, ->has_{exp_id}->{exp_id}.* as seg, <-has_rt<-sample.* as samp from rtrace where ->has_{exp_id}->{exp_id} == []")
 
             for res in tqdm(results, desc=f"Segmenting traces :: {exp_id}"):
                 rt = res.get("rt")
                 try:
                     s = time.time()
-                    offsets, labels = self.__call__(trace=rt, **kwargs)
+                    offsets, labels = self.__call__(trace=rt, problem=res.get("samp")[0].get("question"), **kwargs)
                     e = time.time()
                 except Exception as e:
                     print(e)

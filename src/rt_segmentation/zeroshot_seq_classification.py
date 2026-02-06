@@ -4,7 +4,7 @@ import os
 import random
 import time
 from collections import Counter
-from functools import lru_cache
+from functools import lru_cache, partial
 from typing import List, Dict, Tuple, Literal, Any
 from datasets import load_dataset
 import torch
@@ -96,3 +96,24 @@ class RTZeroShotSeqClassification(SegBase):
 
 
         return final_offsets, final_labels
+
+
+class RTZeroShotSeqClassificationRF(RTZeroShotSeqClassification):
+    _segment = staticmethod(partial(RTZeroShotSeqClassification._segment, labels=["Context",
+                                                                                  "Planning",
+                                                                                  "Fact",
+                                                                                  "Reasoning",
+                                                                                  "Restatement",
+                                                                                  "Assumption",
+                                                                                  "Example",
+                                                                                  "Reflection",
+                                                                                  "Conclusion"]))
+class RTZeroShotSeqClassificationTA(RTZeroShotSeqClassification):
+    _segment = staticmethod(partial(RTZeroShotSeqClassification._segment, labels=["Problem Setup",
+                                                                                  "Plan Generation",
+                                                                                  "Fact Retrieval",
+                                                                                  "Active Computation",
+                                                                                  "Uncertainty Management",
+                                                                                  "Result Consolidation",
+                                                                                  "Self Checking",
+                                                                                  "Final Answer Emission"]))
