@@ -59,7 +59,7 @@ def main_exp(aligner: OffsetFusion = OffsetFusionGraph,
 
 
     models = [
-        [RTLLMOffsetBased],
+        # [RTLLMOffsetBased],
        # [RTLLMForcedDecoderBased],
         #[RTLLMSegUnitBased],
         #[RTRuleRegex],

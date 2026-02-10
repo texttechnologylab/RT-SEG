@@ -41,7 +41,10 @@ class RTSeg:
                  engines: Union[List[SegBase], SegBase],
                  aligner: Optional[OffsetFusion] = None,
                  label_fusion_type: Literal["majority", "concat"] = "majority",
-                 seg_base_unit: Literal["sent", "clause"] = "clause"):
+                 seg_base_unit: Literal["sent", "clause"] = "clause",
+                 model_base: Literal["Qwen/Qwen2.5-7B-Instruct",
+                                     "Qwen/Qwen2.5-3B-Instruct",
+                                     "Qwen/Qwen2.5-0.5B-Instruct"] = "Qwen/Qwen2.5-0.5B-Instruct"):
         """
         Initializes a new instance of the class with the specified engine.
 
@@ -104,15 +107,15 @@ class RTSeg:
                                 "system_prompt": load_prompt("system_prompt_sentbased"),
                                 "prompt": "",
                                 "chunk_size": 100},
-            RTLLMForcedDecoderBased: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
+            RTLLMForcedDecoderBased: {"model_name": model_base,
                                       "system_prompt": load_prompt("system_prompt_forceddecoder")},
-            RTLLMSurprisal: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
+            RTLLMSurprisal: {"model_name": model_base,
                              "system_prompt": load_prompt("system_prompt_surprisal")},
-            RTLLMEntropy: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
+            RTLLMEntropy: {"model_name": model_base,
                            "system_prompt": load_prompt("system_prompt_surprisal")},
-            RTLLMTopKShift: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
+            RTLLMTopKShift: {"model_name": model_base,
                              "system_prompt": load_prompt("system_prompt_surprisal")},
-            RTLLMFlatnessBreak: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
+            RTLLMFlatnessBreak: {"model_name": model_base,
                                  "system_prompt": load_prompt("system_prompt_surprisal")},
             RTBERTopicSegmentation: {"model_name": "Qwen/Qwen2.5-1.5B-Instruct",
                                      "system_prompt": load_prompt("system_prompt_topic_label")},

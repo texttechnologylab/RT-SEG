@@ -31,7 +31,7 @@ from rt_segmentation import (RTLLMOffsetBased,
                              OffsetFusion,
                              RTZeroShotSeqClassificationTA,
                              RTZeroShotSeqClassificationRF, import_annotated_data)
-
+from rt_segmentation.seg_eval_utils import score_approaches_triadic_boundary_similarity
 
 
 def human_agreement():
@@ -100,11 +100,11 @@ def human_agreement():
 
 
 
-def score_approaches_triadic_boundary_similarity(human_baseline: Literal["reasoning_flow_gold",
-                                                                        "thought_anchor_gold",
-                                                                        "comb"] = "thought_anchor_gold"):
-    models = [
-        # [RTLLMOffsetBased],
+
+
+if __name__ == "__main__":
+    mm = [
+        [RTLLMOffsetBased],
         [RTLLMForcedDecoderBased],
         [RTLLMSegUnitBased],
         [RTRuleRegex],
@@ -115,7 +115,7 @@ def score_approaches_triadic_boundary_similarity(human_baseline: Literal["reason
         [RTLLMTopKShift],
         [RTLLMFlatnessBreak],
         [RTLLMSurprisal],
-       # [RTBERTopicSegmentation],
+        [RTBERTopicSegmentation],
         [RTZeroShotSeqClassification],
         [RTLLMReasoningFlow],
         [RTLLMArgument],
@@ -130,67 +130,6 @@ def score_approaches_triadic_boundary_similarity(human_baseline: Literal["reason
         [RTLLMReasoningFlow, RTZeroShotSeqClassificationRF],
         [RTNewLine, RTRuleRegex, RTLLMSegUnitBased]
     ]
-    aligner: OffsetFusion = OffsetFusionGraph
-    seg_base_unit: Literal["clause", "sent"] = "clause"
-
-    target_experiments = [RTSeg(engines=m, aligner=aligner, seg_base_unit=seg_base_unit).exp_id for m in models]
-
-    if human_baseline == "reasoning_flow_gold":
-        gold_keys = ["reasoning_flow_gold"]
-    elif human_baseline == "thought_anchor_gold":
-        gold_keys = ["thought_anchor_gold_ve",
-                     "though_anchor_gold_ve",
-                     "thought_anchor_gold_ha",
-                     "though_anchor_gold_ha"]
-    else:
-        gold_keys = ["thought_anchor_gold_ve",
-                     "though_anchor_gold_ve",
-                     "thought_anchor_gold_ha",
-                     "though_anchor_gold_ha",
-                     "reasoning_flow_gold"]
-    login_data = sdb_login()
-    with Surreal(login_data["url"]) as db:
-        db.signin({"username": login_data["user"], "password": login_data["pwd"]})
-        db.use(login_data["ns"], login_data["db"])
-
-        res = db.query(
-            "SELECT *, ->?->?.* from rtrace")
-
-    traces = []
-    human_anno_data = dict()
-    model_anno_data = dict()
-    for rtrace in tqdm(res, desc="Gathering data"):
-        traces.append(rtrace["rt"])
-        for anno in rtrace["->?"]["->?"]:
-            if anno.get("id").table_name in gold_keys:
-                if anno.get("id").table_name in human_anno_data:
-                    human_anno_data[anno.get("id").table_name].append(anno["split"])
-                else:
-                    human_anno_data[anno.get("id").table_name] = [anno["split"]]
-            elif anno.get("id").table_name in target_experiments:
-                if anno.get("id").table_name in model_anno_data:
-                    model_anno_data[anno.get("id").table_name].append(anno["split"])
-                else:
-                    model_anno_data[anno.get("id").table_name] = [anno["split"]]
-            else:
-                pass
-
-    print(*human_anno_data.items(), sep="\n")
-    print(*model_anno_data.items(), sep="\n")
-
-    assert len(list(set([len(v) for (k, v) in human_anno_data.items()]))) == 1, [(k, len(v)) for (k, v) in human_anno_data.items()]
-    assert len(list(set([len(v) for (k, v) in model_anno_data.items()]))) == 1, [(k, len(v)) for (k, v) in model_anno_data.items()]
-    assert set([len(v) for (k, v) in human_anno_data.items()]) == set([len(v) for (k, v) in model_anno_data.items()])
-
-    for model in model_anno_data:
-        current_data = copy.deepcopy(human_anno_data)
-        current_data[model] = model_anno_data[model]
-        target_data = []
-        for idx in range(len(current_data[[*current_data.keys()][0]])):
-            target_data.append({k: v[idx] for (k, v) in current_data.items()})
-
-        score = evaluate_approaches_bounding_similarity(traces, target_data)
-        print(f"{model} group score: {score:.3f}")
-
-if __name__ == "__main__":
-    score_approaches_triadic_boundary_similarity()
+    aa: OffsetFusion = OffsetFusionGraph
+    ss: Literal["clause", "sent"] = "clause"
+    score_approaches_triadic_boundary_similarity(mm, aa, ss)

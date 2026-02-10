@@ -155,18 +155,26 @@ class RTBERTopicSegmentation(SegBase):
                                                                   "Restatement", "Example", "Reflection",
                                                                   "Conclusion"],
             )
+        try:
+            topic_model = RTBERTopicSegmentation.load_topic_model(embedding_model_name)
 
-        topic_model = RTBERTopicSegmentation.load_topic_model(embedding_model_name)
-
-        embeddings = RTBERTopicSegmentation.load_embedding_model(embedding_model_name).encode(documents)
-        topics, probs = topic_model.fit_transform(documents, embeddings)
-        if all_custom_labels:
-            labelling_model, tokenizer = RTBERTopicSegmentation.load_model(model_name)
-            custom_labels = RTBERTopicSegmentation.get_topic_label(topic_model=topic_model,
-                                                                   labelling_model=labelling_model, tokenizer=tokenizer,
-                                                                   system_prompt=system_prompt)
-            labels = [custom_labels[t] for t in topics]
-        else:
-            topic_labels = topic_model.topic_labels_
-            labels = [topic_labels[t] for t in topics]
+            embeddings = RTBERTopicSegmentation.load_embedding_model(embedding_model_name).encode(documents)
+            topics, probs = topic_model.fit_transform(documents, embeddings)
+            if all_custom_labels:
+                labelling_model, tokenizer = RTBERTopicSegmentation.load_model(model_name)
+                custom_labels = RTBERTopicSegmentation.get_topic_label(topic_model=topic_model,
+                                                                       labelling_model=labelling_model, tokenizer=tokenizer,
+                                                                       system_prompt=system_prompt)
+                labels = [custom_labels[t] for t in topics]
+            else:
+                topic_labels = topic_model.topic_labels_
+                labels = [topic_labels[t] for t in topics]
+        except:
+            return RTZeroShotSeqClassification._segment(trace=trace,
+                                                        seg_base_unit=seg_base_unit,
+                                                        model_name="facebook/bart-large-mnli",
+                                                        labels=["Context", "Planning", "Fact",
+                                                                "Restatement", "Example", "Reflection",
+                                                                "Conclusion"],
+                                                        )
         return offsets, labels
