@@ -40,7 +40,8 @@ class RTSeg:
     def __init__(self,
                  engines: Union[List[SegBase], SegBase],
                  aligner: Optional[OffsetFusion] = None,
-                 label_fusion_type: Literal["majority", "concat"] = "majority"):
+                 label_fusion_type: Literal["majority", "concat"] = "majority",
+                 seg_base_unit: Literal["sent", "clause"] = "clause"):
         """
         Initializes a new instance of the class with the specified engine.
 
@@ -71,14 +72,22 @@ class RTSeg:
                        utilized by the class. It plays a central 
                        role in all operations of the class.
         """
+
+
         if isinstance(engines, list):
             pass
         else:
             engines = [engines]
 
+        if len(engines) == 1:
+            self.exp_id = engines[0].__name__ + f"_{seg_base_unit}"
+        else:
+            self.exp_id = "_".join([m.__name__ for m in engines]) + f"_{aligner.__name__}_{seg_base_unit}"
+
         if aligner is None and len(engines) > 1:
             raise ValueError("Multiple engines provided without an alignment strategy.")
 
+        self.seg_base_unit = seg_base_unit
         self.engines = engines
         self.aligner = aligner
         self.label_fusion_type = label_fusion_type
@@ -130,9 +139,20 @@ class RTSeg:
                                  "system_prompt": load_prompt("system_prompt_argument"),
                                  "user_prompt": load_prompt("user_prompt_argument")}
         }
+        for m in self.default_kwargs:
+            self.default_kwargs[m]["seg_base_unit"] = seg_base_unit
+
+    def retrieve(self, db: str = "RT_RF"):
+        login_data = sdb_login()
+        login_data["db"] = db
+        with Surreal(login_data["url"]) as db:
+            db.signin({"username": login_data["user"], "password": login_data["pwd"]})
+            db.use(login_data["ns"], login_data["db"])
+
+        res = db.query(f"SELECT * from {self.exp_id};")
+        return res
 
     def sdb_segment_ds(self,
-                       exp_id: str,
                        clear: bool = True,
                        db: str = "RT_RF",
                        **kwargs):
@@ -142,20 +162,20 @@ class RTSeg:
             db.signin({"username": login_data["user"], "password": login_data["pwd"]})
             db.use(login_data["ns"], login_data["db"])
             if clear:
-                db.query(f"REMOVE TABLE {exp_id};")
-                db.query(f"DEFINE TABLE {exp_id} SCHEMALESS;")
-                db.query(f"DEFINE INDEX idx_id ON {exp_id} FIELDS id;")
+                db.query(f"REMOVE TABLE {self.exp_id};")
+                db.query(f"DEFINE TABLE {self.exp_id} SCHEMALESS;")
+                db.query(f"DEFINE INDEX idx_id ON {self.exp_id} FIELDS id;")
 
-                db.query(f"REMOVE TABLE has_{exp_id};")
-                db.query(f"DEFINE TABLE has_{exp_id} SCHEMALESS TYPE RELATION IN rtrace OUT {exp_id};")
-                db.query(f"DEFINE INDEX idx_rt_id ON has_{exp_id} FIELDS id;")
-                db.query(f"DEFINE INDEX idx_rt_in ON has_{exp_id} FIELDS in;")
-                db.query(f"DEFINE INDEX idx_rt_out ON has_{exp_id} FIELDS out;")
+                db.query(f"REMOVE TABLE has_{self.exp_id};")
+                db.query(f"DEFINE TABLE has_{self.exp_id} SCHEMALESS TYPE RELATION IN rtrace OUT {self.exp_id};")
+                db.query(f"DEFINE INDEX idx_rt_id ON has_{self.exp_id} FIELDS id;")
+                db.query(f"DEFINE INDEX idx_rt_in ON has_{self.exp_id} FIELDS in;")
+                db.query(f"DEFINE INDEX idx_rt_out ON has_{self.exp_id} FIELDS out;")
 
             results = db.query(
-                f"SELECT *, ->has_{exp_id}->{exp_id}.* as seg, <-has_rt<-sample.* as samp from rtrace where ->has_{exp_id}->{exp_id} == []")
+                f"SELECT *, ->has_{self.exp_id}->{self.exp_id}.* as seg, <-has_rt<-sample.* as samp from rtrace where ->has_{self.exp_id}->{self.exp_id} == []")
 
-            for res in tqdm(results, desc=f"Segmenting traces :: {exp_id}"):
+            for res in tqdm(results, desc=f"Segmenting traces :: {self.exp_id}"):
                 rt = res.get("rt")
                 try:
                     s = time.time()
@@ -165,9 +185,9 @@ class RTSeg:
                     print(e)
                     continue
 
-                split_id = RecordID(f"{exp_id}", res.get("id").id)
+                split_id = RecordID(f"{self.exp_id}", res.get("id").id)
                 db.upsert(split_id, {"split": offsets, "labels": labels, "ptime": e - s})
-                db.insert_relation(f"has_{exp_id}", {"in": res.get("id"), "out": split_id})
+                db.insert_relation(f"has_{self.exp_id}", {"in": res.get("id"), "out": split_id})
 
     def __call__(self, trace: str, **kwargs) -> Tuple[List[Tuple[int, int]], List[str]]:
         engine_offsets = []

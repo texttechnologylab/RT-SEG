@@ -1,6 +1,6 @@
 import json
 from functools import lru_cache
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Dict, Optional, Any
 from nltk.metrics.agreement import AnnotationTask
 import numpy as np
 import pandas as pd
@@ -790,52 +790,26 @@ def aggregated_results_to_json(agg_results: dict) -> dict:
     return json_dict
 
 
+def evaluate_triadic_consensus(segs: List[List[Tuple[int, int]]],
+                               trace_len: int):
+    """
+    Calculates the B-score for H1, H2, and a specific AI model.
+    """
+    scorer = ReasoningAgreementSuite(window_size=10)
+    return [scorer.boundary_similarity(comb[0], comb[1], trace_len) for comb in combinations(segs, 2)]
+
+
+def evaluate_approaches_bounding_similarity(traces: List[str], segmentations: List[Any]):
+    # Aggregation loop
+    all_triplets = []
+    for i in range(len(traces)):
+        scores = evaluate_triadic_consensus([v for (k, v) in segmentations[i].items()], len(traces[i]))
+        all_triplets.extend(scores)
+
+    final_group_score = np.mean(all_triplets)
+    # print(f"Final group score: {final_group_score:.3f}")
+    return final_group_score
+
+
 if __name__ == "__main__":
-    trace = "Step 1: Get data. Data is [1, 2]. Step 2: Sum data. Sum is 3. Step 3: Square it. Result is 9."
-
-    segment_data = {
-        "Ground_Truth": [(0, 31), (31, 59), (59, 84)],
-        "Regex_Splitter": [(0, 31), (31, 84)],  # Missed Step 3
-        "LLM_Fine": [(0, 16), (16, 31), (31, 46), (46, 59), (59, 84)],  # Over-segmented
-        "Streber": [(0, 31), (31, 59), (59, 84)],
-    }
-
-    # Run single-trace evaluation
-    tables = evaluate_segmentations(
-        trace=trace,
-        segmentations=segment_data,
-        gold_key="Ground_Truth",
-        sigma=5.0,
-        window=3,
-        slack=10,
-    )
-
-    print("=== Single Trace Evaluation ===")
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
-        for name, df in tables.items():
-            print(f"\n--- {name} ---")
-            print(df)
-
-    # Aggregate across multiple traces (here using the same trace 3 times)
-    agg_tables = evaluate_aggregate_segmentations(
-        traces=[trace, trace, trace],
-        segmentations=[segment_data, segment_data, segment_data],
-        gold_key="Ground_Truth",
-        sigma=5.0,
-        window=3,
-        slack=10,
-    )
-
-    print("\n=== Aggregated Linear Metrics ===")
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
-        print(agg_tables['linear_metrics'])
-
-    print("\n=== Aggregated Agreement Metrics ===")
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
-        print(agg_tables['pairwise_agreement_metrics'])
-
-    print("\n=== Aggregated Agreement Metrics ===")
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
-        print(agg_tables['per_method_agreement_metrics'])
-
-    print(json.dumps(aggregated_results_to_json(agg_tables)))
+    pass

@@ -3,6 +3,8 @@ from functools import partial
 from typing import Any, Literal
 import multiprocessing as mp
 
+from surrealdb import Surreal, RecordID
+from tqdm import tqdm
 
 mp.set_start_method('spawn', force=True)
 
@@ -30,33 +32,26 @@ from rt_segmentation import (RTLLMOffsetBased,
                              RTSeg,
                              OffsetFusion,
                              RTZeroShotSeqClassificationTA,
-                             RTZeroShotSeqClassificationRF)
+                             RTZeroShotSeqClassificationRF, import_annotated_data)
 
 
 def run_single_model_exp(model_list, aligner, seg_base_unit):
-    # Create the ID string
-    if len(model_list) == 1:
-        exp_id = model_list[0].__name__
-    else:
-        exp_id = "_".join([m.__name__ for m in model_list])
-
-    print(f"Starting experiment: {exp_id}")
-
+    rt_seg = RTSeg(
+        engines=model_list,
+        aligner=None if len(model_list) == 1 else aligner,
+        label_fusion_type="concat",
+        seg_base_unit=seg_base_unit
+    )
     try:
-        rt_seg = RTSeg(
-            engines=model_list,
-            aligner=None if len(model_list) == 1 else aligner,
-            label_fusion_type="concat"
-        )
         rt_seg.sdb_segment_ds(
-            exp_id=exp_id,
-            clear=True,
+            exp_id=rt_seg.exp_id,
+            clear=False,
             db="RT_RF",
             seg_base_unit=seg_base_unit
         )
-        return f"SUCCESS: {exp_id}"
+        return f"SUCCESS: {rt_seg.exp_id}"
     except Exception as e:
-        return f"FAILED: {exp_id} with error: {e}"
+        return f"FAILED: {rt_seg.exp_id} with error: {e}"
 
 
 def main_exp(aligner: OffsetFusion = OffsetFusionGraph,
@@ -64,41 +59,42 @@ def main_exp(aligner: OffsetFusion = OffsetFusionGraph,
 
 
     models = [
-        # [RTLLMOffsetBased],
-        [RTLLMForcedDecoderBased],
-        [RTLLMSegUnitBased],
-        [RTRuleRegex],
-        [RTNewLine],
+        [RTLLMOffsetBased],
+       # [RTLLMForcedDecoderBased],
+        #[RTLLMSegUnitBased],
+        #[RTRuleRegex],
+        #[RTNewLine],
         # [RTPRMBase],
-        [RTEntailmentBasedSegmentation],
-        [RTLLMEntropy],
-        [RTLLMTopKShift],
-        [RTLLMFlatnessBreak],
-        [RTLLMSurprisal],
+        #[RTEntailmentBasedSegmentation],
+        #[RTLLMEntropy],
+        #[RTLLMTopKShift],
+        #[RTLLMFlatnessBreak],
+        #[RTLLMSurprisal],
         [RTBERTopicSegmentation],
-        [RTZeroShotSeqClassification],
-        [RTLLMReasoningFlow],
-        [RTLLMArgument],
-        [RTLLMThoughtAnchor],
-        [RTEmbeddingBasedSemanticShift],
-        [RTZeroShotSeqClassificationRF],
-        [RTZeroShotSeqClassificationTA],
-        [RTZeroShotSeqClassificationRF, RTZeroShotSeqClassificationTA],
-        [RTLLMReasoningFlow, RTLLMThoughtAnchor],
-        [RTLLMReasoningFlow, RTLLMThoughtAnchor, RTLLMArgument],
-        [RTLLMThoughtAnchor, RTZeroShotSeqClassificationTA],
-        [RTLLMReasoningFlow, RTZeroShotSeqClassificationRF],
-        [RTNewLine, RTRuleRegex, RTLLMSegUnitBased]
+        #[RTZeroShotSeqClassification],
+        #[RTLLMReasoningFlow],
+        #[RTLLMArgument],
+        #[RTLLMThoughtAnchor],
+        #[RTEmbeddingBasedSemanticShift],
+        #[RTZeroShotSeqClassificationRF],
+        #[RTZeroShotSeqClassificationTA],
+       # [RTZeroShotSeqClassificationRF, RTZeroShotSeqClassificationTA],
+        #[RTLLMReasoningFlow, RTLLMThoughtAnchor],
+        #[RTLLMReasoningFlow, RTLLMThoughtAnchor, RTLLMArgument],
+        #[RTLLMThoughtAnchor, RTZeroShotSeqClassificationTA],
+        #[RTLLMReasoningFlow, RTZeroShotSeqClassificationRF],
+        #[RTNewLine, RTRuleRegex, RTLLMSegUnitBased]
               ]
     # Use partial to 'freeze' the aligner and seg_base_unit arguments
     worker_func = partial(run_single_model_exp, aligner=aligner, seg_base_unit=seg_base_unit)
 
 
-    with mp.Pool(processes=6) as pool:
+    with mp.Pool(processes=2) as pool:
         results = pool.map(worker_func, models)
 
     for result in results:
         print(result)
+
 
 
 
@@ -117,5 +113,9 @@ if __name__ == "__main__":
         print(trace[r[0]:r[1]])
 
     print("res: ", res[0])"""
+
+    # main_exp()
+
+    # import_annotated_data()
 
     main_exp()

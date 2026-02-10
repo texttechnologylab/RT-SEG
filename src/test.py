@@ -1,3 +1,6 @@
+import json
+
+import pandas as pd
 import pytest
 import time
 
@@ -16,7 +19,8 @@ from rt_segmentation import (RTLLMOffsetBased,
                              load_example_trace, RTLLMSurprisal, RTLLMEntropy, RTLLMTopKShift, RTLLMFlatnessBreak,
                              export_gold_set,
 
-                             RTSeg, OffsetFusionGraph,RTLLMReasoningFlow, RTLLMArgument, RTLLMThoughtAnchor)
+                             RTSeg, OffsetFusionGraph, RTLLMReasoningFlow, RTLLMArgument, RTLLMThoughtAnchor,
+                             evaluate_aggregate_segmentations, aggregated_results_to_json, evaluate_segmentations)
 
 
 
@@ -147,8 +151,9 @@ def test_RTEntailmentBasedSegmentation():
 
 def test_FactorySegmentation():
     rt_seg = RTSeg(engines=[RTRuleRegex, RTBERTopicSegmentation],
-                   aligner=OffsetFusionGraph)
-    offsets, labels = rt_seg(trace=load_example_trace("trc1"), seg_base_unit="clause")
+                   aligner=OffsetFusionGraph,
+                   seg_base_unit="clause")
+    offsets, labels = rt_seg(trace=load_example_trace("trc1"))
     print(offsets)
     print(labels)
     assert isinstance(offsets, list)
@@ -205,6 +210,71 @@ def test_RTLLMThoughtAnchor():
     assert isinstance(offsets[0], tuple) or isinstance(offsets[0], list)
     assert isinstance(offsets[0][0], int) and isinstance(offsets[0][1], int)
     assert isinstance(labels[0], str)
+
+
+def test_SingleTraceEval():
+    trace = "Step 1: Get data. Data is [1, 2]. Step 2: Sum data. Sum is 3. Step 3: Square it. Result is 9."
+
+    segment_data = {
+        "Ground_Truth": [(0, 31), (31, 59), (59, 84)],
+        "Regex_Splitter": [(0, 31), (31, 84)],  # Missed Step 3
+        "LLM_Fine": [(0, 16), (16, 31), (31, 46), (46, 59), (59, 84)],  # Over-segmented
+        "Streber": [(0, 31), (31, 59), (59, 84)],
+    }
+
+    # Run single-trace evaluation
+    tables = evaluate_segmentations(
+        trace=trace,
+        segmentations=segment_data,
+        gold_key="Ground_Truth",
+        sigma=5.0,
+        window=3,
+        slack=10,
+    )
+
+    print("=== Single Trace Evaluation ===")
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
+        for name, df in tables.items():
+            print(f"\n--- {name} ---")
+            print(df)
+
+    assert isinstance(tables, dict)
+
+
+def test_AggregatedEval():
+    trace = "Step 1: Get data. Data is [1, 2]. Step 2: Sum data. Sum is 3. Step 3: Square it. Result is 9."
+
+    segment_data = {
+        "Ground_Truth": [(0, 31), (31, 59), (59, 84)],
+        "Regex_Splitter": [(0, 31), (31, 84)],  # Missed Step 3
+        "LLM_Fine": [(0, 16), (16, 31), (31, 46), (46, 59), (59, 84)],  # Over-segmented
+        "Streber": [(0, 31), (31, 59), (59, 84)],
+    }
+    # Aggregate across multiple traces (here using the same trace 3 times)
+    agg_tables = evaluate_aggregate_segmentations(
+        traces=[trace, trace, trace],
+        segmentations=[segment_data, segment_data, segment_data],
+        gold_key="Ground_Truth",
+        sigma=5.0,
+        window=3,
+        slack=10,
+    )
+
+    print("\n=== Aggregated Linear Metrics ===")
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
+        print(agg_tables['linear_metrics'])
+
+    print("\n=== Aggregated Agreement Metrics ===")
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
+        print(agg_tables['pairwise_agreement_metrics'])
+
+    print("\n=== Aggregated Agreement Metrics ===")
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.width', None):
+        print(agg_tables['per_method_agreement_metrics'])
+
+    assert isinstance(json.dumps(aggregated_results_to_json(agg_tables)), str)
+
+
 
 if __name__ == "__main__":
     pytest.main([

@@ -220,8 +220,11 @@ class MyApp(App):
                         "flatten": OffsetFusionFlatten,
                         "intersect": OffsetFusionIntersect,
                         "none": None,}
-        factory = RTSeg(engines=engines, aligner=aligner_dict[selected_aligner], label_fusion_type="concat")
-        offsets, seg_labels = factory(text, seg_base_unit="clause")
+        factory = RTSeg(engines=engines,
+                        aligner=aligner_dict[selected_aligner],
+                        label_fusion_type="concat",
+                        seg_base_unit="clause")
+        offsets, seg_labels = factory(text)
 
         if set(seg_labels) == {"UNK"}:
             seg_labels = [f"{sl}:{idx}" for idx, sl in enumerate(seg_labels)]

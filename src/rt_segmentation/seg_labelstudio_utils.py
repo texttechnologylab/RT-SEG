@@ -168,6 +168,72 @@ def export_rf_data_gold_set():
         json.dump(ds, f, indent=4)
 
 
+def extract_first_index(xpath_string):
+    match = re.search(r'\[(\d+)\]', xpath_string)
+    if match:
+        return int(match.group(1))
+
+    return None
+
+
+def import_annotated_data():
+    anno_id_map = {"ve": 8, "ha": 1}
+    id_anno_map = {v: k for k, v in anno_id_map.items()}
+
+    login_data = sdb_login()
+    with open(f"{bp()}/data/label_studio/annotated_data.json", "r") as f:
+        data = json.load(f)
+
+    with Surreal(login_data["url"]) as db:
+        db.signin({"username": login_data["user"], "password": login_data["pwd"]})
+        db.use(login_data["ns"], login_data["db"])
+        for (k, v) in anno_id_map.items():
+            db.query(f"REMOVE TABLE thought_anchor_gold_{k};")
+            db.query(f"DEFINE TABLE thought_anchor_gold_{k} SCHEMALESS;")
+            db.query(f"DEFINE INDEX idx_id ON thought_anchor_gold_{k} FIELDS id;")
+
+            db.query(f"REMOVE TABLE has_thought_anchor_gold_{k};")
+            db.query(f"DEFINE TABLE has_thought_anchor_gold_{k} SCHEMALESS TYPE RELATION IN rtrace OUT thought_anchor_gold_{k};")
+            db.query(f"DEFINE INDEX idx_rt_id ON has_thought_anchor_gold_{k} FIELDS id;")
+            db.query(f"DEFINE INDEX idx_rt_in ON has_thought_anchor_gold_{k} FIELDS in;")
+            db.query(f"DEFINE INDEX idx_rt_out ON has_thought_anchor_gold_{k} FIELDS out;")
+
+
+    for sample in tqdm(data, desc="Uploading Results"):
+        sample_offsets = sample["data"]["offsets"]
+        sample_id = sample["data"]["origin_id"]
+
+        with Surreal(login_data["url"]) as db:
+            db.signin({"username": login_data["user"], "password": login_data["pwd"]})
+            db.use(login_data["ns"], login_data["db"])
+
+            record_id = RecordID("rtrace", sample_id)
+
+            rec = db.query(f"SELECT * FROM {record_id};")[0]
+
+            for annotation in sample["annotations"]:
+                sample_annotator_id = annotation["completed_by"]
+                annotation_offsets = []
+                annotation_labels = []
+                for result in annotation["result"]:
+                    start_clause = extract_first_index(result["value"]["start"]) - 1
+                    end_clause = extract_first_index(result["value"]["end"]) - 1
+
+                    start_offset = sample_offsets[start_clause][0] + result["value"]["startOffset"]
+                    end_offset = sample_offsets[end_clause][0] + result["value"]["endOffset"]
+                    annotation_offsets.append((start_offset, end_offset))
+                    annotation_labels.append(result["value"]["hypertextlabels"])
+
+                split_id = RecordID(f"thought_anchor_gold_{id_anno_map[sample_annotator_id]}", sample_id)
+                db.upsert(split_id, {"split": annotation_offsets, "labels": annotation_labels})
+                db.insert_relation(f"has_thought_anchor_gold_{id_anno_map[sample_annotator_id]}", {"in": record_id, "out": split_id})
+                for offset in annotation_offsets:
+                    print(rec["rt"][offset[0]:offset[1]])
+                    print(20*"-")
+
+
+
+
 
 if __name__ == "__main__":
     export_gold_set()
