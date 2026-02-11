@@ -162,4 +162,8 @@ class RTLLMArgument(SegBase):
                 current_start = offsets[i + 1][0]
                 current_end = offsets[i + 1][1]
                 current_label = labels[i + 1]
-        return final_offsets, final_labels
+        cleaned_final_offsets = []
+        for idx in range(len(final_offsets) - 1):
+            cleaned_final_offsets.append((final_offsets[idx][0], final_offsets[idx + 1][0]))
+        cleaned_final_offsets.append((final_offsets[-1][0], len(trace)))
+        return cleaned_final_offsets, final_labels
