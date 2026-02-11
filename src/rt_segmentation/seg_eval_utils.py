@@ -883,6 +883,71 @@ def score_approaches_triadic_boundary_similarity(models, aligner, seg_base_unit,
         print(f"{model} group score: {score:.3f}")
 
 
+def score_approaches_triadic_boundary_similarity_complete(human_baseline: Literal["reasoning_flow_gold",
+                                                                                  "thought_anchor_gold",
+                                                                                  "comb"] = "thought_anchor_gold"):
+
+    if human_baseline == "reasoning_flow_gold":
+        gold_keys = ["reasoning_flow_gold"]
+    elif human_baseline == "thought_anchor_gold":
+        gold_keys = ["thought_anchor_gold_ve",
+                     "though_anchor_gold_ve",
+                     "thought_anchor_gold_ha",
+                     "though_anchor_gold_ha"]
+    else:
+        gold_keys = ["thought_anchor_gold_ve",
+                     "though_anchor_gold_ve",
+                     "thought_anchor_gold_ha",
+                     "though_anchor_gold_ha",
+                     "reasoning_flow_gold"]
+    login_data = sdb_login()
+    with Surreal(login_data["url"]) as db:
+        db.signin({"username": login_data["user"], "password": login_data["pwd"]})
+        db.use(login_data["ns"], login_data["db"])
+
+        res = db.query(
+            "SELECT *, ->?->?.* from rtrace")
+
+    traces = []
+    human_anno_data = dict()
+    model_anno_data = dict()
+    for rtrace in tqdm(res, desc="Gathering data"):
+        traces.append(rtrace["rt"])
+        for anno in rtrace["->?"]["->?"]:
+            if anno.get("id").table_name in gold_keys:
+                if anno.get("id").table_name in human_anno_data:
+                    human_anno_data[anno.get("id").table_name].append(anno["split"])
+                else:
+                    human_anno_data[anno.get("id").table_name] = [anno["split"]]
+            else:
+                if anno.get("id").table_name in model_anno_data:
+                    model_anno_data[anno.get("id").table_name].append(anno["split"])
+                else:
+                    model_anno_data[anno.get("id").table_name] = [anno["split"]]
+
+
+    print(*human_anno_data.items(), sep="\n")
+    print(*model_anno_data.items(), sep="\n")
+
+    assert len(list(set([len(v) for (k, v) in human_anno_data.items()]))) == 1, [(k, len(v)) for (k, v) in
+                                                                                 human_anno_data.items()]
+    human_len =  [len(v) for (k, v) in human_anno_data.items()][0]
+    # assert len(list(set([len(v) for (k, v) in model_anno_data.items()]))) == 1, [(k, len(v)) for (k, v) in model_anno_data.items()]
+    # assert set([len(v) for (k, v) in human_anno_data.items()]) == set([len(v) for (k, v) in model_anno_data.items()])
+
+    for model in model_anno_data:
+        if len(model_anno_data[model]) == human_len:
+            current_data = copy.deepcopy(human_anno_data)
+            current_data[model] = model_anno_data[model]
+            target_data = []
+            for idx in range(len(current_data[[*current_data.keys()][0]])):
+                target_data.append({k: v[idx] for (k, v) in current_data.items()})
+
+            score = evaluate_approaches_bounding_similarity(traces, target_data)
+            print(f"{model} group score: {score:.3f}")
+
+
+
 @lru_cache(maxsize=None)
 def get_human_baseline(human_baseline: Literal["reasoning_flow_gold",
                                                              "thought_anchor_gold",

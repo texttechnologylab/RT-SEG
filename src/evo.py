@@ -10,7 +10,6 @@ from typing import List, Any, Tuple, Optional, Dict
 from surrealdb import Surreal
 
 from rt_segmentation import RTSeg, OffsetFusionFuzzy, OffsetFusionIntersect, OffsetFusionMerge
-from rt_segmentation.seg_eval_utils import score_approaches_triadic_boundary_similarity_one_model
 from rt_segmentation import (RTLLMOffsetBased,
                              RTLLMForcedDecoderBased,
                              RTLLMSegUnitBased,
@@ -34,7 +33,10 @@ from rt_segmentation import (RTLLMOffsetBased,
                              RTSeg,
                              OffsetFusion,
                              RTZeroShotSeqClassificationTA,
-                             RTZeroShotSeqClassificationRF, import_annotated_data, OffsetFusionVoting)
+                             RTZeroShotSeqClassificationRF,
+                             import_annotated_data,
+                             OffsetFusionVoting,
+                             score_approaches_triadic_boundary_similarity_one_model)
 
 # ----------------------------- USER TO FILL THESE -----------------------------
 # List your 20 model engines here (in a fixed order - the GA will always select/subset them in this order)

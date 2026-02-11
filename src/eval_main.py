@@ -6,7 +6,7 @@ from surrealdb import Surreal
 from tqdm import tqdm
 
 from rt_segmentation import sdb_login, evaluate_aggregate_segmentations, evaluate_segmentations, \
-    evaluate_approaches_bounding_similarity
+    evaluate_approaches_bounding_similarity, score_approaches_triadic_boundary_similarity_complete
 from rt_segmentation import (RTLLMOffsetBased,
                              RTLLMForcedDecoderBased,
                              RTLLMSegUnitBased,
@@ -30,8 +30,10 @@ from rt_segmentation import (RTLLMOffsetBased,
                              RTSeg,
                              OffsetFusion,
                              RTZeroShotSeqClassificationTA,
-                             RTZeroShotSeqClassificationRF, import_annotated_data)
-from rt_segmentation.seg_eval_utils import score_approaches_triadic_boundary_similarity
+                             RTZeroShotSeqClassificationRF,
+                             import_annotated_data,
+                             score_approaches_triadic_boundary_similarity)
+
 
 
 def human_agreement():
@@ -132,4 +134,6 @@ if __name__ == "__main__":
     ]
     aa: OffsetFusion = OffsetFusionGraph
     ss: Literal["clause", "sent"] = "clause"
-    score_approaches_triadic_boundary_similarity(mm, aa, ss)
+    # score_approaches_triadic_boundary_similarity(mm, aa, ss)
+
+    score_approaches_triadic_boundary_similarity_complete()
