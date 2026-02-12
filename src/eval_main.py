@@ -6,7 +6,7 @@ from surrealdb import Surreal
 from tqdm import tqdm
 
 from rt_segmentation import sdb_login, evaluate_aggregate_segmentations, evaluate_segmentations, \
-    evaluate_approaches_bounding_similarity, score_approaches_triadic_boundary_similarity_complete
+    evaluate_approaches_bounding_similarity, score_approaches_triadic_boundary_similarity_complete, plot_score_vs_time
 from rt_segmentation import (RTLLMOffsetBased,
                              RTLLMForcedDecoderBased,
                              RTLLMSegUnitBased,
@@ -136,4 +136,5 @@ if __name__ == "__main__":
     ss: Literal["clause", "sent"] = "clause"
     # score_approaches_triadic_boundary_similarity(mm, aa, ss)
 
-    score_approaches_triadic_boundary_similarity_complete()
+    # score_approaches_triadic_boundary_similarity_complete()
+    plot_score_vs_time()
