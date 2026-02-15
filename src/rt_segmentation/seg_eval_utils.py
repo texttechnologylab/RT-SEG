@@ -2,6 +2,8 @@ import copy
 import json
 from functools import lru_cache
 from typing import List, Tuple, Dict, Optional, Any, Literal
+
+from nltk.metrics import scores
 from nltk.metrics.agreement import AnnotationTask
 import numpy as np
 import pandas as pd
@@ -1032,6 +1034,12 @@ def score_approaches_triadic_boundary_similarity_complete_ta(window: int = 10):
     for idx in range(len(human_anno_data[human_keys[0]])):
         human_threshold.append(scorer.boundary_similarity(human_anno_data[human_keys[0]][idx], human_anno_data[human_keys[1]][idx], len(traces[idx])))
 
+    print(40 * "=")
+    print(40 * "=")
+    y = [(s, m) for s, m in zip(model_scores, model_names)]
+    y.sort(key=lambda x: x[0], reverse=True)
+    print(*y, sep="\n")
+
     return {"labels": labels, "score": model_scores, "time": model_times, "shapes": shapes, "model_ids": model_names}, np.mean(human_threshold)
 
 
@@ -1146,6 +1154,13 @@ def score_approaches_triadic_boundary_similarity_complete_rf(window: int = 10):
         else:
             shapes.append("none")
 
+    print(40 * "=")
+    print(40 * "=")
+    y = [(s, m) for s, m in zip(model_scores, model_names)]
+    y.sort(key=lambda x: x[0], reverse=True)
+    print(*y, sep="\n")
+
+    print(len(model_scores))
     return {"labels": labels, "score": model_scores, "time": model_times, "shapes": shapes, "model_ids": model_names}
 
 

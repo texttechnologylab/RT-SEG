@@ -198,6 +198,11 @@ def plot_stacked_with_ids(list1, list2, list3, list4, model_ids,
     "RTLLMSegUnitBased": "LLM Unit"
 }
     model_ids = [target_mapping[m] for m in model_ids]
+    print(*{'Score': [round(float(fff), 3) for fff in list1], 'Model': model_ids, 'Type': 'TA Schema'}.items(), sep='\n')
+    print(*{'Score': [round(float(fff), 3) for fff in list2], 'Model': model_ids, 'Type': 'RF Schema'}.items(), sep='\n')
+
+    print(*{'Score': [round(float(fff), 3) for fff in list3], 'Model': model_ids, 'Type': 'TA Schema - sent'}.items(), sep='\n')
+    print(*{'Score': [round(float(fff), 3) for fff in list4], 'Model': model_ids, 'Type': 'RF Schema - sent'}.items(), sep='\n')
     # --- 1. DATA PREPARATION ---
     df_bot = pd.concat([
         pd.DataFrame({'Score': list1, 'Model': model_ids, 'Type': 'TA Schema'}),
