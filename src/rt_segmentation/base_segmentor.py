@@ -8,6 +8,7 @@ import stanza
 from sympy.categories.baseclasses import Class
 
 
+
 class UnitSegmentor:
     patterns = {
             "display_math": r"\$\$.*?\$\$",
