@@ -1,4 +1,5 @@
 import random
+import traceback
 from typing import List, Tuple, Dict, Literal
 import colorsys
 from rich.text import Text
@@ -263,19 +264,31 @@ class MyApp(App):
                         aligner=aligner_dict[selected_aligner],
                         label_fusion_type=selected_fusion,
                         seg_base_unit=selected_unit)
-        offsets, seg_labels = factory(text)
+        try:
+            offsets, seg_labels = factory(text)
+            if set(seg_labels) == {"UNK"}:
+                seg_labels = [f"{sl}:{idx}" for idx, sl in enumerate(seg_labels)]
 
-        if set(seg_labels) == {"UNK"}:
-            seg_labels = [f"{sl}:{idx}" for idx, sl in enumerate(seg_labels)]
+            markup = segments_to_rich_markup(text, offsets, seg_labels, generate_label_colors(seg_labels))
+            spaced_markup = "\n\n".join(markup.splitlines())
 
-        markup = segments_to_rich_markup(text, offsets, seg_labels, generate_label_colors(seg_labels))
-        spaced_markup = "\n\n".join(markup.splitlines())
+            results_widget = self.query_one("#results-table", Static)
+            results_widget.update(f"[bold underline]Method: {'|'.join(selected_methods)}[/]\n\n{spaced_markup}")
 
-        results_widget = self.query_one("#results-table", Static)
-        results_widget.update(f"[bold underline]Method: {'|'.join(selected_methods)}[/]\n\n{spaced_markup}")
+            self.query_one(ResultsPanel).scroll_end()
+            textarea.focus()
+        except Exception as e:
+            error_str = traceback.format_exc()
+            results_widget = self.query_one("#results-table", Static)
+            results_widget.update(
+                "[bold red]Exception occurred:[/]\n\n"
+                + escape(error_str)  # IMPORTANT: prevents Rich markup parsing
+            )
 
-        self.query_one(ResultsPanel).scroll_end()
-        textarea.focus()
+            self.query_one(ResultsPanel).scroll_end()
+            textarea.focus()
+
+
 
 
 if __name__ == "__main__":

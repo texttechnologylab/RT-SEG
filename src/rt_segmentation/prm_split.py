@@ -104,7 +104,7 @@ class RTPRMBase(SegBase):
     @staticmethod
     def _segment(trace: str,
                  seg_base_unit: Literal["sent", "clause"],
-                 problem: str,
+                 problem: str = "The problem is unknown, please reason step by step.",
                  chunk_size: int = 50,
                  window: int = 4,
                  quantile: int = 60,
