@@ -72,7 +72,7 @@ def plot_approach_evaluation(data_dict, threshold, eid: str):
 
     # 6. Labels
     plt.xlabel(r"Time Complexity (s) [$\mathbf{\sqrt[4]{t}}$ scale]", fontweight='bold')
-    plt.ylabel('Bounding Similarity', fontweight='bold')
+    plt.ylabel('Boundary Similarity', fontweight='bold')
     sns.despine()
 
     # ---------------------------------------------------------
@@ -309,7 +309,7 @@ def sort_aligned_lists(key_list, *other_lists):
     ax_top.set_xlabel("")
 
     # figure-level y labels (left + right)
-    fig.supylabel("Bounding Similarity", fontweight='bold', fontsize=45)
+    fig.supylabel("Boundary Similarity", fontweight='bold', fontsize=45)
     fig.text(1.04, 0.5, "Processing Time (s)", va='center', ha='right',
              rotation=-90, fontweight='bold', fontsize=45)
 
@@ -521,7 +521,7 @@ def plot_stacked_with_ids(list1, list2, list3, list4,
     ax_top.set_xlabel("")
 
     # figure-level y labels
-    fig.supylabel("Bounding Similarity", fontweight="bold", fontsize=45)
+    fig.supylabel("Boundary Similarity", fontweight="bold", fontsize=45)
     fig.text(1.04, 0.5, "Processing Time (s)", va="center", ha="right",
              rotation=-90, fontweight="bold", fontsize=45)
 
@@ -622,7 +622,7 @@ def plot_single_engine_results_ta_and_rf(window):
 
 
 def plot_grouped_boxplot(scores, labels, threshold,
-                         xlabel="Combinations", ylabel="Bounding Similarity",
+                         xlabel="Combinations", ylabel="Boundary Similarity",
                          eid="boxplot_eval",
                          threshold_text="Inter Human Baseline (TA)"):
     """
@@ -698,7 +698,7 @@ def plot_grouped_boxplot(scores, labels, threshold,
 
 
 def plot_overlapping_kde_normalized(scores, labels,
-                                    xlabel="Bounding Similarity", ylabel="Normalized Density",
+                                    xlabel="Boundary Similarity", ylabel="Normalized Density",
                                     eid="kde_eval",
                                     bw_adjust=0.5, clip=(0, 1)):
 
