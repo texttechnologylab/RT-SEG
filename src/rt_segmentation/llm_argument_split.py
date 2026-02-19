@@ -138,7 +138,6 @@ class RTLLMArgument(SegBase):
                 except Exception as e:
                     print(50 * "=")
                     print(e)
-                    print(response)
                     print(50 * "=")
                     if retry < max_retry:
                         retry += 1

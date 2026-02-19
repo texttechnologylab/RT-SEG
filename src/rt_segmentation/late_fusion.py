@@ -153,11 +153,16 @@ class LabelFusion:
                     if overlap > 0:
                         overlapping_labels.append(label)
             if not overlapping_labels:
-                fused_label = "UNKNOWN"
+                fused_label = "UNK"
             elif mode == "majority":
-                fused_label = Counter(overlapping_labels).most_common(1)[0][0]
+                try:
+                    fused_label = Counter([l for l in overlapping_labels if "unk" not in l.lower()]).most_common(1)[0][0]
+                except:
+                    fused_label = "UNK"
             elif mode == "concat":
-                fused_label = "+".join(sorted(set(overlapping_labels)))
+                fused_label = "+".join(sorted(set([l for l in overlapping_labels if "unk" not in l.lower()])))
+                if fused_label == "":
+                    fused_label = "UNK"
             else:
                 raise ValueError("mode must be 'majority' or 'concat'")
             aligned_labels.append(fused_label)

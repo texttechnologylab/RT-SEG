@@ -37,7 +37,6 @@ from rt_segmentation import (RTLLMOffsetBased,
                              OffsetFusionGraph,
                              OffsetFusionMerge,
                              OffsetFusionVoting,
-                             OffsetFusionFlatten,
                              OffsetFusionIntersect,
                              OffsetFusion,
                              LabelFusion
@@ -84,7 +83,7 @@ def segments_to_rich_markup(
             result.append(escape(text[prev:start]))
 
         color = label_colors.get(label, "white")
-        seg_text = escape(text[start:end])
+        seg_text = escape(text[start:end]).strip()
 
         segment_part = f"[black on {color}] {seg_text} [/]"
         tag_part = f" [bold {color}]<[/][{color}]{label}[/][bold {color}]>[/] "
@@ -127,7 +126,6 @@ class InputPanel(Vertical):
                     ("Graph Maxing", "graph"),
                     ("Union", "merge"),
                     ("Majority Voting", "voting"),
-                    ("Flatten", "flatten"),
                     ("Intersection", "intersect"),
                     ("None", "none"),
                 ],
@@ -258,7 +256,6 @@ class MyApp(App):
                         "graph": OffsetFusionGraph,
                         "merge": OffsetFusionMerge,
                         "voting": OffsetFusionVoting,
-                        "flatten": OffsetFusionFlatten,
                         "intersect": OffsetFusionIntersect,
                         "none": None,}
 
