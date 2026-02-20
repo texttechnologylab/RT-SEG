@@ -1,7 +1,7 @@
 ---
 layout: default
 title: OffsetFusionMerge
-parent: Offset Fusion (Late Fusion Aligners)
+parent: Fusion
 nav_order: 1
 ---
 
