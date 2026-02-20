@@ -1,4 +1,4 @@
-# RT-SEG
+![My Image](assets/logo.svg)
 
 This project requires a configuration file for database authentication.
 
