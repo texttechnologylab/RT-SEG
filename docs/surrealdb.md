@@ -1,6 +1,7 @@
 ---
 layout: default
-title: SurrealDB
+title: Reproducibility
+nav_order: 8
 ---
 
 # SurrealDB (Optional — Reproducible Experiments)

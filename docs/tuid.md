@@ -1,6 +1,7 @@
 ---
 layout: default
 title: TUI (Docker + GPU)
+nav_order: 7
 ---
 
 # TUI Docker + GPU Setup

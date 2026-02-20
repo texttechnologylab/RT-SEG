@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Fusion
+nav_order: 4
 ---
 
 # Offset Fusion Strategies

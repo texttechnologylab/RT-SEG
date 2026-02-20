@@ -1,6 +1,7 @@
 ---
 layout: default
 title: TUI
+nav_order: 6
 ---
 
 # Running the TUI (Without Docker)

@@ -1,14 +1,8 @@
+theme: just-the-docs
+
 title: RT-SEG
 description: Reasoning Trace Segmentation Framework
-theme: minima
 markdown: kramdown
 
-header_pages:
-  - installation.md
-  - core-concepts.md
-  - engines.md
-  - fusion.md
-  - extending.md
-  - surrealdb.md
-  - tui.md
-  - tuid.md
+# Optional but recommended
+search_enabled: true
