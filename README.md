@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.svg" width="40%" style="max-width: 400px;">
+  <img src="assets/logo.svg" width="30%" style="max-width: 400px;">
 </p>
 This project requires a configuration file for database authentication.
 
