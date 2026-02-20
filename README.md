@@ -88,10 +88,10 @@ for (s, e), label in zip(offsets, labels):
 If you pass multiple engines, you must provide an **aligner**.
 
 ```python
-from rt_seg.seg_factory import RTSeg
-from rt_seg.rule_split_regex import RTRuleRegex
-from rt_seg.bertopic_segmentation import RTBERTopicSegmentation
-from rt_seg.late_fusion import OffsetFusionGraph
+from rt_seg import RTSeg
+from rt_seg import RTRuleRegex
+from rt_seg import RTBERTopicSegmentation
+from rt_seg import OffsetFusionGraph
 
 segmentor = RTSeg(
     engines=[RTRuleRegex, RTBERTopicSegmentation],
