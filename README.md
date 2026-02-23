@@ -38,6 +38,10 @@ pip install -r requirements.txt
 
 # Core Concepts
 
+<p align="center">
+  <img src="docs/assets/arch.svg" width="0%">
+</p>
+
 ## What `RTSeg` Returns
 
 `RTSeg(trace)` produces:
