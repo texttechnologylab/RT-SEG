@@ -9,6 +9,13 @@ nav_order: 1
 </p>
 
 # RT-SEG — Reasoning Trace Segmentation
+---
+
+
+https://github.com/user-attachments/assets/26107b7b-4df9-4daf-92f9-eb141e220334
+
+
+---
 
 RT-SEG is a modular research framework for the segmentation of reasoning traces into coherent structural and semantic units.
 
