@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="156.19609mm"
-   height="78.915367mm"
-   viewBox="0 0 156.19609 78.915367"
+   width="158.39995mm"
+   height="82.829544mm"
+   viewBox="0 0 158.39995 82.829544"
    version="1.1"
    id="svg5"
    inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
@@ -39,6 +39,42 @@
      inkscape:current-layer="layer1" />
   <defs
      id="defs2">
+    <linearGradient
+       id="linearGradient3229"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#463abe;stop-opacity:1;"
+         offset="0"
+         id="stop3227" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3221"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#463abe;stop-opacity:1;"
+         offset="0"
+         id="stop3219" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3191"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop3189" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient255">
+      <stop
+         style="stop-color:#6600ff;stop-opacity:1"
+         offset="0"
+         id="stop251" />
+      <stop
+         style="stop-color:#330080;stop-opacity:1"
+         offset="1"
+         id="stop253" />
+    </linearGradient>
     <linearGradient
        inkscape:collect="always"
        id="linearGradient681">
@@ -75,28 +111,6 @@
          offset="1"
          id="stop663" />
     </linearGradient>
-    <linearGradient
-       inkscape:collect="always"
-       id="linearGradient649">
-      <stop
-         style="stop-color:#d7eef4;stop-opacity:1"
-         offset="0"
-         id="stop645" />
-      <stop
-         style="stop-color:#87cdde;stop-opacity:1"
-         offset="1"
-         id="stop647" />
-    </linearGradient>
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient649"
-       id="linearGradient651"
-       x1="129.99098"
-       y1="62.391941"
-       x2="131.19627"
-       y2="94.387947"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(1.0860385,0,0,1.0860385,-8.1790029,-7.0213419)" />
     <linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient665"
@@ -157,25 +171,32 @@
        y1="53.358074"
        x2="127.08047"
        y2="10.609401" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient255"
+       id="linearGradient257"
+       x1="90.568207"
+       y1="62.516148"
+       x2="90.60437"
+       y2="99.785416"
+       gradientUnits="userSpaceOnUse" />
   </defs>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-16.561825,-67.945669)">
+     style="display:inline"
+     transform="translate(-15.563554,-66.95204)">
     <rect
-       style="fill:url(#linearGradient667);fill-opacity:1;stroke-width:0.324126"
+       style="fill:url(#linearGradient667);fill-opacity:1;stroke:#766cd2;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
        id="rect171"
        width="18.902319"
        height="63.161526"
        x="29.022615"
        y="83.812729"
-       transform="matrix(0.98618569,-0.16564357,0.16375019,0.98650184,0,0)"
-       inkscape:export-filename="./rect171.svg"
-       inkscape:export-xdpi="24.392416"
-       inkscape:export-ydpi="24.392416" />
+       transform="matrix(0.98618569,-0.16564357,0.16375019,0.98650184,0,0)" />
     <rect
-       style="fill:url(#linearGradient779);fill-opacity:1;stroke-width:0.274049"
+       style="fill:url(#linearGradient779);fill-opacity:1;stroke:#766cd2;stroke-width:2.00001;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
        id="rect171-0"
        width="15.905959"
        height="53.658524"
@@ -183,7 +204,7 @@
        y="95.879128"
        transform="matrix(0.93046475,-0.36638142,0.36169948,0.93229474,0,0)" />
     <rect
-       style="fill:url(#linearGradient675);fill-opacity:1;stroke-width:0.255091"
+       style="fill:url(#linearGradient675);fill-opacity:1;stroke:#766cd2;stroke-width:2.00677;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
        id="rect171-5"
        width="10.68472"
        height="69.210144"
@@ -191,7 +212,7 @@
        y="70.324356"
        transform="matrix(0.99966449,-0.02590195,0.14152496,0.98993469,0,0)" />
     <rect
-       style="fill:url(#linearGradient683);fill-opacity:1;stroke-width:0.259144"
+       style="fill:url(#linearGradient683);fill-opacity:1;stroke:#766cd2;stroke-width:2.00963;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
        id="rect171-3"
        width="13.32141"
        height="57.288868"
@@ -199,7 +220,7 @@
        y="74.242126"
        transform="matrix(0.99764728,0.06855589,-0.20550938,0.97865515,0,0)" />
     <rect
-       style="fill:url(#linearGradient824);fill-opacity:1;stroke-width:0.213997"
+       style="fill:url(#linearGradient824);fill-opacity:1;stroke:#766cd2;stroke-width:2.00002;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
        id="rect171-3-0"
        width="9.2619448"
        height="56.188965"
@@ -207,7 +228,7 @@
        y="62.973354"
        transform="matrix(0.98645395,0.16403842,-0.17007829,0.98543055,0,0)" />
     <rect
-       style="fill:url(#linearGradient869);fill-opacity:1;stroke-width:0.335245"
+       style="fill:url(#linearGradient869);fill-opacity:1;stroke:#766cd2;stroke-width:2.10122;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
        id="rect171-3-0-9"
        width="18.96534"
        height="67.344337"
@@ -216,15 +237,15 @@
        transform="matrix(0.97917396,0.20302304,-0.59843904,0.80116835,0,0)" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:43.4446px;font-family:'Inter Display';-inkscape-font-specification:'Inter Display, Heavy';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient651);fill-opacity:1;stroke-width:3.62036"
-       x="47.822845"
-       y="92.090179"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:46.9059px;font-family:Roboto;-inkscape-font-specification:'Roboto, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient257);fill-opacity:1;stroke:#7e74d6;stroke-width:2.509;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+       x="45.352165"
+       y="97.415611"
        id="text469"
-       transform="scale(0.68945641,1.450418)"><tspan
+       transform="scale(0.72156807,1.3858706)"><tspan
          sodipodi:role="line"
          id="tspan467"
-         style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:43.4446px;font-family:'Inter Display';-inkscape-font-specification:'Inter Display, Heavy';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient651);fill-opacity:1;stroke-width:3.62036"
-         x="47.822845"
-         y="92.090179">RT-Seg</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:46.9059px;font-family:Roboto;-inkscape-font-specification:'Roboto, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient257);fill-opacity:1;stroke:#7e74d6;stroke-width:2.509;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         x="45.352165"
+         y="97.415611">RT-Seg</tspan></text>
   </g>
 </svg>
