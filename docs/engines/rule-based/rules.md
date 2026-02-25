@@ -104,8 +104,8 @@ No other parameters are required.
 ## Usage
 
 ```python
-from rt_seg.seg_factory import RTSeg
-from rt_seg.rule_split_regex import RTRuleRegex  # adjust import to your package structure
+from rt_seg import RTSeg
+from rt_seg import RTRuleRegex
 
 trace = "We first compute X. However, this approach fails. Therefore we try Y. Final answer: ..."
 

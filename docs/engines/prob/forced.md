@@ -119,8 +119,8 @@ Implementation details:
 ## Usage
 
 ```python
-from rt_seg.seg_factory import RTSeg
-from rt_seg.rt_llm_forced_decoder_based import RTLLMForcedDecoderBased  # adjust import to your package structure
+from rt_seg import RTSeg
+from rt_seg import RTLLMForcedDecoderBased
 
 trace = "First step... Then second step... Finally conclude."
 

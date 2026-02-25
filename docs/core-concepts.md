@@ -35,8 +35,8 @@ Most engines operate on a base segmentation first:
 ## Quickstart — Single Engine
 
 ```python
-from rt_segmentation import RTSeg  # from rt_seg import RTSeg -- If using python Package
-from rt_segmentation import RTRuleRegex
+from rt_seg import RTSeg
+from rt_seg import RTRuleRegex
 
 trace = "First step... Then second step... Finally conclude."
 
@@ -56,10 +56,10 @@ for (s, e), label in zip(offsets, labels):
 If you pass multiple engines, you must provide an **aligner**.
 
 ```python
-from rt_segmentation import RTSeg
-from rt_segmentation import RTRuleRegex
-from rt_segmentation import RTBERTopicSegmentation
-from rt_segmentation import OffsetFusionGraph
+from rt_seg import RTSeg
+from rt_seg import RTRuleRegex
+from rt_seg import RTBERTopicSegmentation
+from rt_seg import OffsetFusionGraph
 
 segmentor = RTSeg(
     engines=[RTRuleRegex, RTBERTopicSegmentation],

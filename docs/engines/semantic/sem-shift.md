@@ -99,8 +99,8 @@ Implementation notes:
 ## Usage
 
 ```python
-from rt_seg.seg_factory import RTSeg
-from rt_seg.semantic_shift import RTEmbeddingBasedSemanticShift  # adjust import to your package structure
+from rt_seg import RTSeg
+from rt_seg import RTEmbeddingBasedSemanticShift
 
 trace = "First step... Then second step... Finally conclude."
 

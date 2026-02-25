@@ -124,8 +124,8 @@ Implementation notes:
 ## Usage
 
 ```python
-from rt_seg.seg_factory import RTSeg
-from rt_seg.llm_seg_unit_based import RTLLMSegUnitBased  # adjust import to your package structure
+from rt_seg import RTSeg
+from rt_seg import RTLLMSegUnitBased
 
 trace = "..."
 

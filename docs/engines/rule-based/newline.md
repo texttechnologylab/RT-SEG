@@ -54,8 +54,8 @@ None. This engine is purely regex-based.
 ## Usage
 
 ```python
-from rt_seg.seg_factory import RTSeg
-from rt_seg.newline import RTNewLine  # adjust import to your package structure
+from rt_seg import RTSeg
+from rt_seg import RTNewLine
 
 trace = "Step 1: ...\n\nStep 2: ...\n\nFinal: ..."
 

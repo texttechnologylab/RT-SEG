@@ -112,8 +112,8 @@ Given:
 ## Usage
 
 ```python
-from rt_seg.seg_factory import RTSeg
-from rt_seg.prm_base import RTPRMBase  # adjust import to your package structure
+from rt_seg import RTSeg
+from rt_seg import RTPRMBase
 
 problem = "Compute the value of ..."
 
@@ -134,3 +134,4 @@ offsets, labels = segmentor(
 )
 
 segments = [trace[s:e] for s, e in offsets]
+```

@@ -148,7 +148,7 @@ This is best used as a **diagnostic**, not the headline metric.
 
 ## Minimal example: evaluate one method vs gold (single trace)
 ```python
-from rt_segmentation.seg_eval_utils import evaluate_segmentations
+from rt_seg import evaluate_segmentations
 
 trace = "Step 1: Get data. Data is [1, 2]. Step 2: Sum data. Sum is 3. Step 3: Square it. Result is 9."
 
@@ -179,7 +179,7 @@ What you get:
 
 Use this when you have multiple traces and want means/stds per method:
 ```python
-from rt_segmentation.seg_eval_utils import evaluate_aggregate_segmentations, aggregated_results_to_json
+from rt_seg import evaluate_aggregate_segmentations, aggregated_results_to_json
 
 traces = [
     "Trace one ...",

@@ -98,8 +98,8 @@ This is an NLI/XNLI-style model that provides logits over NLI classes.
 ## Usage
 
 ```python
-from rt_seg.seg_factory import RTSeg
-from rt_seg.entailment_segmentation import RTEntailmentBasedSegmentation  # adjust import to your package structure
+from rt_seg import RTSeg
+from rt_seg import RTEntailmentBasedSegmentation
 
 trace = "..."
 

@@ -8,7 +8,7 @@ nav_order: 6
 
 ```python
 from typing import Tuple, List
-from rt_segmentation.seg_base import SegBase
+from rt_seg import SegBase
 
 class MyEngine(SegBase):
     @staticmethod
