@@ -18,7 +18,7 @@ It orchestrates one or more **segmentation engines** and — if multiple engines
 
 ---
 
-<video src="docs/assets/rt_seg_demo.mp4" controls width="100%"></video>
+![Demo](docs/assets/rt_seg_demo.mp4)
 
 ---
 
