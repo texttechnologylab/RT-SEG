@@ -38,6 +38,16 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+## Install TUI APP with Docker/Podman
+
+Note: requires NVIDIA GPU (12.4.1+).
+```bash
+docker build -f docker/Dockerfile -t mytui:gpu .
+docker run -it --rm --gpus all mytui:gpu
+
+# podman build -f docker/Dockerfile -t mytui:gpu .
+# podman run -it --rm --device nvidia.com/gpu=all mytui:gpu
+```
 ---
 
 # Core Concepts
