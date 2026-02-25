@@ -532,22 +532,30 @@ def plot_stacked_with_ids(list1, list2, list3, list4,
     # --- ONE global legend above both plots, with black box ---
     def add_global_legend_with_box(fig):
         ta_handle = mlines.Line2D([], [], color=shared_color_map["TA Schema"],
-                                  marker='o', linestyle='None', markersize=10, label="TA Schema")
+                                  marker='o', linestyle='None', markersize=20, label="TA Schema")
         rf_handle = mlines.Line2D([], [], color=shared_color_map["RF Schema"],
-                                  marker='o', linestyle='None', markersize=10, label="RF Schema")
-        conn_handle = mlines.Line2D([], [], color="black", linestyle='-', linewidth=2, alpha=0.45, label="Δ (TA↔RF)")
+                                  marker='o', linestyle='None', markersize=20, label="RF Schema")
+        conn_handle = mlines.Line2D([], [], color="black", linestyle='-', linewidth=2, alpha=0.6, label="Δ (TA↔RF)")
         bar_handle = mlines.Line2D([], [], color='lightblue', marker='s', linestyle='None',
-                                   markersize=14, alpha=0.25, label='Proc Time')
+                                   markersize=20, alpha=0.25, label='Proc Time')
 
         handles = [ta_handle, rf_handle, conn_handle, bar_handle]
 
         leg = fig.legend(
             handles=handles,
             loc='upper center',
-            bbox_to_anchor=(0.5, 1.1),
+            bbox_to_anchor=(0.52, 1.1),
             ncol=4,
             frameon=False,
-            fontsize='x-small'
+            fontsize='medium',
+
+            handletextpad=0.3,  # space between marker and text
+            borderpad=0.1,  # padding inside legend box
+            labelspacing=0.2,  # vertical space between entries
+            columnspacing=0.4,  # horizontal space between columns
+            handlelength=0.8,  # length of legend lines
+            handleheight=0.8,  # height of handle area
+            borderaxespad=0.1  # space between legend and axes
         )
 
         fig.canvas.draw()
@@ -747,29 +755,42 @@ def plot_overlapping_kde_normalized(scores, labels,
     ax.tick_params(axis="y", labelsize=35)
 
     # Create legend (no internal frame)
-    leg = ax.legend(loc="upper right", frameon=False, fontsize="small")
+    leg = ax.legend(loc="upper right",
+                    frameon=False,
+                    fontsize="medium",
+
+                    markerscale=1.6,  # ← increase marker size
+                    handlelength=0.8,  # ← shorten line/marker length
+                    handletextpad=0.3,  # marker ↔ text spacing
+                    labelspacing=0.2,  # vertical spacing
+                    columnspacing=0.5,  # horizontal spacing (if multiple columns)
+                    borderpad=0.2,  # inside padding
+                    borderaxespad=0.2  # legend ↔ axes spacing
+                    )
 
     # Draw black rectangle around legend (axes coordinates)
     fig.canvas.draw()
-    inv = ax.transAxes.inverted()
-    bbox = inv.transform_bbox(leg.get_window_extent())
+    renderer = fig.canvas.get_renderer()
 
-    pad = 0.01  # adjust padding if needed
-    ax.add_patch(Rectangle(
-        (bbox.x0 - pad, bbox.y0 - pad),
-        bbox.width + 2 * pad,
-        bbox.height + 2 * pad,
+    bbox_disp = leg.get_window_extent(renderer=renderer)
+    bbox_fig = bbox_disp.transformed(fig.transFigure.inverted())
+
+    pad = 0.005
+    fig.add_artist(Rectangle(
+        (bbox_fig.x0 - pad, bbox_fig.y0 - pad),
+        bbox_fig.width + 2 * pad,
+        bbox_fig.height + 2 * pad,
         fill=False,
-        edgecolor='black',
+        edgecolor="black",
         linewidth=1,
-        transform=ax.transAxes,
-        zorder=10
+        transform=fig.transFigure,
+        zorder=1000
     ))
 
     sns.despine(ax=ax)
 
 
-    plt.savefig(f"{bp()}/data/plots/kde_{eid}.pdf", format="pdf", bbox_inches="tight")
+    plt.savefig(f"{bp()}/data/plots/kde_{eid}.pdf", format="pdf", bbox_inches="tight", pad_inches=0.05)
     plt.show()
 
 
