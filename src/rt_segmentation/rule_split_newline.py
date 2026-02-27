@@ -11,3 +11,13 @@ class RTNewLine(SegBase):
         # Pair consecutive positions
         offsets = list(zip(positions, positions[1:] + [len(trace)]))
         return offsets, ["UNK" for _ in offsets]
+
+
+class RTNewLineVerbose(SegBase):
+    @staticmethod
+    def _segment(trace: str, **kwargs) -> tuple[list[tuple[int, int]], list[str]]:
+        # Find positions after each \n\n or at start
+        positions = [m.end() for m in re.finditer(r'\n|\A', trace)]
+        # Pair consecutive positions
+        offsets = list(zip(positions, positions[1:] + [len(trace)]))
+        return offsets, ["UNK" for _ in offsets]

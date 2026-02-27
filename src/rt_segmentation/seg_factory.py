@@ -9,7 +9,7 @@ from .seg_utils import bp, sdb_login, load_prompt, load_example_trace
 from .seg_base import SegBase
 
 from .rule_split_regex import RTRuleRegex
-from .rule_split_newline import RTNewLine
+from .rule_split_newline import RTNewLine, RTNewLineVerbose
 from .llm_split_offset import RTLLMOffsetBased
 from .llm_split_sent_chunks import RTLLMSegUnitBased
 from .llm_split_forced_decoder import RTLLMForcedDecoderBased
@@ -99,6 +99,7 @@ class RTSeg:
                           "system_prompt": None},
             RTNewLine: {"model_name": None,
                         "system_prompt": None},
+            RTNewLineVerbose: {"model_name": None,},
             RTLLMOffsetBased: {"model_name": "Qwen/Qwen2.5-7B-Instruct",
                                "system_prompt": load_prompt("system_prompt_offset"),
                                "prompt": "",

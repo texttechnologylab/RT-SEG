@@ -39,7 +39,8 @@ from rt_segmentation import (RTLLMOffsetBased,
                              OffsetFusionVoting,
                              OffsetFusionIntersect,
                              OffsetFusion,
-                             LabelFusion
+                             LabelFusion,
+RTNewLineVerbose
                              )
 
 
@@ -134,6 +135,7 @@ class InputPanel1(Vertical):
             yield SelectionList(
                 ("Rule Based Split", "rule"),
                 ("Newline Split", "newline"),
+                ("Paragraph Split", "para"),
                 ("LLM (tok-chunk)", "offset"),
                 ("LLM (sent-chunk)", "sent"),
                 ("Surprisal", "surprisal"),
@@ -214,7 +216,8 @@ class MyApp(App):
 
         engines = []
         method_dict = {"rule": RTRuleRegex,
-                       "newline": RTNewLine,
+                       "newline": RTNewLineVerbose,
+                       "para": RTNewLine,
                        "entropy": RTLLMEntropy,
                        "flatness": RTLLMFlatnessBreak,
                        "forced": RTLLMForcedDecoderBased,
